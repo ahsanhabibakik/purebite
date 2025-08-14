@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
-
-const prisma = new PrismaClient();
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -77,7 +76,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -93,14 +92,21 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     const { items, shippingAddress, paymentMethod, total, subtotal, tax, shipping } = data;
 
+    // Generate unique order number
+    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
     const order = await prisma.order.create({
       data: {
         userId: user.id,
+        orderNumber,
         total: parseFloat(total),
         subtotal: parseFloat(subtotal),
         tax: parseFloat(tax || '0'),
         shipping: parseFloat(shipping || '0'),
         status: 'PENDING',
+        paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
+        shippingAddress: JSON.stringify(shippingAddress),
+        currency: 'BDT',
         items: {
           create: items.map((item: any) => ({
             productId: item.productId,

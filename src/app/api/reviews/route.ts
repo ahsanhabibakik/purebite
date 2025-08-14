@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
-
-const prisma = new PrismaClient();
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,7 +60,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -76,6 +75,19 @@ export async function POST(request: NextRequest) {
 
     const data = await request.json();
     const { productId, rating, title, comment } = data;
+
+    // Check if user has purchased this product (for verified reviews)
+    const hasPurchased = await prisma.order.findFirst({
+      where: {
+        userId: user.id,
+        items: {
+          some: {
+            productId,
+          },
+        },
+        status: 'DELIVERED',
+      },
+    });
 
     // Check if user has already reviewed this product
     const existingReview = await prisma.review.findFirst({
@@ -99,6 +111,7 @@ export async function POST(request: NextRequest) {
         rating: parseInt(rating),
         title,
         comment,
+        verified: !!hasPurchased,
       },
       include: {
         user: {
