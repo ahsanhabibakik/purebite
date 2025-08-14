@@ -71,19 +71,63 @@ export default function CheckoutPage() {
   const onSubmit = async (data: CheckoutForm) => {
     setIsSubmitting(true);
     
-    // Simulate order processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    console.log("Order Data:", {
-      items,
-      customerInfo: data,
-      totalAmount: finalTotal,
-      orderDate: new Date()
-    });
+    try {
+      if (data.paymentMethod === 'cash_on_delivery') {
+        // Handle cash on delivery - create order directly
+        const orderData = {
+          items,
+          customerInfo: data,
+          totalAmount: finalTotal,
+          paymentMethod: data.paymentMethod,
+          orderDate: new Date()
+        };
 
-    clearCart();
-    setOrderPlaced(true);
-    setIsSubmitting(false);
+        // TODO: Send to your order creation API
+        console.log("Cash on Delivery Order:", orderData);
+        
+        clearCart();
+        setOrderPlaced(true);
+      } else {
+        // Handle online payment via Stripe
+        const response = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items,
+            shippingAddress: {
+              fullName: data.fullName,
+              street: data.street,
+              area: data.area,
+              city: data.city,
+              district: data.district,
+              postalCode: data.postalCode,
+              phone: data.phone,
+              email: data.email,
+            },
+            subtotal: totalPrice,
+            tax: 0,
+            shipping: deliveryFee,
+            total: finalTotal,
+          }),
+        });
+
+        const result = await response.json();
+        
+        if (result.url) {
+          // Redirect to Stripe checkout
+          window.location.href = result.url;
+        } else {
+          throw new Error('Failed to create checkout session');
+        }
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Checkout failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (orderPlaced) {
