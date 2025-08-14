@@ -17,11 +17,11 @@ import {
   TrendingUp,
   AlertCircle,
   X,
-  Upload,
   Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 
 // Product form schema
 const productSchema = z.object({
@@ -65,7 +65,7 @@ export default function ProductManagementPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const form = useForm<ProductForm>({
     resolver: zodResolver(productSchema),
@@ -150,15 +150,22 @@ export default function ProductManagementPage() {
   };
 
   const onSubmit = (data: ProductForm) => {
-    console.log("Product data:", data);
+    const productData = {
+      ...data,
+      images: uploadedImages,
+      tags: data.tags ? data.tags.split(',').map(tag => tag.trim()) : [],
+    };
+    console.log("Product data:", productData);
     // TODO: Implement API call to save product
     setShowAddModal(false);
     setEditingProduct(null);
+    setUploadedImages([]);
     form.reset();
   };
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
+    setUploadedImages(product.images);
     form.reset({
       name: product.name,
       description: product.description,
@@ -181,10 +188,11 @@ export default function ProductManagementPage() {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setSelectedImages(Array.from(e.target.files));
-    }
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingProduct(null);
+    setUploadedImages([]);
+    form.reset();
   };
 
   if (isLoading) {
@@ -403,11 +411,7 @@ export default function ProductManagementPage() {
       {showAddModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => {
-              setShowAddModal(false);
-              setEditingProduct(null);
-              form.reset();
-            }}></div>
+            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={handleCloseModal}></div>
             
             <div className="relative bg-white rounded-lg shadow-lg w-full max-w-2xl">
               <div className="flex items-center justify-between p-6 border-b">
@@ -415,11 +419,7 @@ export default function ProductManagementPage() {
                   {editingProduct ? "Edit Product" : "Add New Product"}
                 </h2>
                 <button
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setEditingProduct(null);
-                    form.reset();
-                  }}
+                  onClick={handleCloseModal}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <X className="h-6 w-6" />
@@ -572,35 +572,12 @@ export default function ProductManagementPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Product Images
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-4">
-                    <div className="text-center">
-                      <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 mb-2">
-                        Click to upload or drag and drop
-                      </p>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="image-upload"
-                      />
-                      <label
-                        htmlFor="image-upload"
-                        className="cursor-pointer text-green-600 hover:text-green-700"
-                      >
-                        Choose files
-                      </label>
-                    </div>
-                    {selectedImages.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600">
-                          {selectedImages.length} file(s) selected
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  <ImageUpload
+                    value={uploadedImages}
+                    onChange={setUploadedImages}
+                    maxImages={5}
+                    folder="products"
+                  />
                 </div>
 
                 {/* Status and Featured */}
@@ -635,11 +612,7 @@ export default function ProductManagementPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setEditingProduct(null);
-                      form.reset();
-                    }}
+                    onClick={handleCloseModal}
                   >
                     Cancel
                   </Button>
