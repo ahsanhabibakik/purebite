@@ -2,21 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import { Heart, ShoppingCart, Star, Scale, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
 import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
+import { useComparisonStore } from "@/store/comparison";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
   className?: string;
+  onQuickView?: (product: Product) => void;
 }
 
-export function ProductCard({ product, className }: ProductCardProps) {
+export function ProductCard({ product, className, onQuickView }: ProductCardProps) {
   const { addItem, openCart } = useCartStore();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlistStore();
+  const { addItem: addToComparison, removeItem: removeFromComparison, isInComparison, getTotalItems } = useComparisonStore();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -33,6 +36,22 @@ export function ProductCard({ product, className }: ProductCardProps) {
     } else {
       addToWishlist(product);
     }
+  };
+
+  const handleComparisonToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isInComparison(product.id)) {
+      removeFromComparison(product.id);
+    } else if (getTotalItems() < 3) {
+      addToComparison(product);
+    }
+  };
+
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onQuickView?.(product);
   };
 
   const discountPercentage = product.originalPrice 
@@ -79,6 +98,16 @@ export function ProductCard({ product, className }: ProductCardProps) {
           
           {/* Quick Actions */}
           <div className="absolute right-2 top-12 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+            {onQuickView && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 w-8 rounded-full p-0"
+                onClick={handleQuickView}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               size="sm"
               variant="secondary"
@@ -89,6 +118,18 @@ export function ProductCard({ product, className }: ProductCardProps) {
               onClick={handleWishlistToggle}
             >
               <Heart className={cn("h-4 w-4", isInWishlist(product.id) ? "fill-current" : "")} />
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              className={cn(
+                "h-8 w-8 rounded-full p-0",
+                isInComparison(product.id) ? "bg-blue-100 text-blue-600 hover:bg-blue-200" : ""
+              )}
+              onClick={handleComparisonToggle}
+              disabled={!isInComparison(product.id) && getTotalItems() >= 3}
+            >
+              <Scale className={cn("h-4 w-4", isInComparison(product.id) ? "fill-current" : "")} />
             </Button>
           </div>
         </div>

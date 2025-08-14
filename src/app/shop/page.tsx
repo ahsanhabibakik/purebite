@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductQuickView } from "@/components/ProductQuickView";
 import { products } from "@/data/products";
-import { ProductCategory } from "@/types/product";
+import { ProductCategory, Product } from "@/types/product";
 import {
   Select,
   SelectContent,
@@ -34,6 +35,7 @@ export default function ShopPage() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products;
@@ -356,10 +358,18 @@ export default function ShopPage() {
               key={product.id} 
               product={product}
               className={viewMode === "list" ? "flex flex-row" : ""}
+              onQuickView={setQuickViewProduct}
             />
           ))}
         </div>
       )}
+
+      {/* Quick View Modal */}
+      <ProductQuickView
+        product={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
+      />
     </div>
   );
 }

@@ -2,18 +2,21 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
-import { Search, ShoppingCart, Menu, Heart } from "lucide-react";
+import { Search, ShoppingCart, Menu, Heart, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
+import { useComparisonStore } from "@/store/comparison";
 import { SearchModal } from "@/components/SearchModal";
 import { AuthButton } from "@/components/auth/AuthButton";
 
 export function Header() {
   const { toggleCart, getTotalItems } = useCartStore();
   const { getTotalItems: getWishlistItems } = useWishlistStore();
+  const { getTotalItems: getComparisonItems } = useComparisonStore();
   const totalItems = getTotalItems();
   const wishlistItems = getWishlistItems();
+  const comparisonItems = getComparisonItems();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
@@ -70,6 +73,23 @@ export function Header() {
               {wishlistItems > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
                   {wishlistItems}
+                </span>
+              )}
+            </Link>
+          </Button>
+
+          {/* Comparison */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="relative"
+            asChild
+          >
+            <Link href="/compare">
+              <Scale className="h-4 w-4" />
+              {comparisonItems > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs font-medium text-white">
+                  {comparisonItems}
                 </span>
               )}
             </Link>

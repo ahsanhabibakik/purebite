@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartSidebar } from "@/components/CartSidebar";
+import { LiveChat } from "@/components/LiveChat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
         <Footer />
         <CartSidebar />
+        <LiveChat />
       </body>
     </html>
   );
