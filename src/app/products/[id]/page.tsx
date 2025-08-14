@@ -22,11 +22,12 @@ import { products } from "@/data/products";
 import { useCartStore } from "@/store/cart";
 
 interface ProductPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
-  const product = products.find(p => p.id === params.id);
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { id } = await params;
+  const product = products.find(p => p.id === id);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
