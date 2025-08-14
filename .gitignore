@@ -8,14 +8,14 @@
 # =============================================================================
 .env
 .env.local
+.env.production
 .env.development
 .env.staging
 .env.production.local
 .env*.local
 
-# Keep .env.example and .env.production for reference
-# !.env.example (already tracked)
-# !.env.production (for Vercel setup reference)
+# Only keep .env.example safe for GitHub
+# .env.local and .env.production contain real credentials - NEVER COMMIT
 
 # =============================================================================
 # DEPENDENCIES
