@@ -1,4 +1,5 @@
 import Link from "next/link";
+import React from "react";
 
 export function Header() {
   return (
@@ -37,7 +38,7 @@ export function Header() {
   );
 }
 
-function MountainIcon(props: any) {
+function MountainIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
