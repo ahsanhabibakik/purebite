@@ -17,7 +17,10 @@
       "Bash(pnpm db:generate:*)",
       "Bash(pnpm db:push:*)",
       "Bash(git rm:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(cp:*)",
+      "Bash(docker run:*)",
+      "Bash(pnpm run:*)"
     ],
     "deny": [],
     "ask": [],
