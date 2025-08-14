@@ -1,25 +1,6 @@
-"use client";
-
-import { useState } from "react";
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
-import { 
-  Heart, 
-  Share2, 
-  Star, 
-  ShoppingCart, 
-  Plus, 
-  Minus, 
-  Truck, 
-  Shield, 
-  Award,
-  ChevronLeft,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ProductCard } from "@/components/ProductCard";
 import { products } from "@/data/products";
-import { useCartStore } from "@/store/cart";
+import { ProductPageClient } from "./ProductPageClient";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -28,10 +9,6 @@ interface ProductPageProps {
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
   const product = products.find(p => p.id === id);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-
-  const { addItem, openCart } = useCartStore();
 
   if (!product) {
     notFound();
