@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuthStore } from "@/store/auth";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,8 @@ import {
   Eye,
   MapPin,
   Calendar,
-  ShoppingBag
+  ShoppingBag,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -100,19 +101,48 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function OrdersPage() {
-  const { user, isAuthenticated } = useAuthStore();
-  const [orders] = useState(mockOrders);
+  const { data: session, status } = useSession();
+  const [orders, setOrders] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, fetch user's orders from API
-    if (isAuthenticated && user) {
-      // setOrders(fetchUserOrders(user.id));
-    }
-  }, [isAuthenticated, user]);
+    const fetchOrders = async () => {
+      if (session?.user?.id) {
+        try {
+          const response = await fetch(`/api/orders?userId=${session.user.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setOrders(data.orders || []);
+          } else {
+            // Fallback to mock data for demo
+            setOrders(mockOrders);
+          }
+        } catch (error) {
+          console.error('Failed to fetch orders:', error);
+          setOrders(mockOrders);
+        } finally {
+          setLoading(false);
+        }
+      } else if (status !== "loading") {
+        setLoading(false);
+      }
+    };
 
-  if (!isAuthenticated) {
+    fetchOrders();
+  }, [session, status]);
+
+  if (status === "loading" || loading) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <Loader2 className="mx-auto h-8 w-8 animate-spin text-gray-400 mb-4" />
+        <p className="text-gray-600">অর্ডার লোড হচ্ছে...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <ShoppingBag className="mx-auto h-16 w-16 text-gray-400 mb-4" />
