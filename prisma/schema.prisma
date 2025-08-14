@@ -17,12 +17,12 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
-  orders    Order[]
-  reviews   Review[]
-  wishlist  Wishlist[]
-  
+  orders   Order[]
+  reviews  Review[]
+  wishlist Wishlist[]
+
   @@map("users")
 }
 
@@ -42,30 +42,30 @@ model Product {
   reviewCount Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // Relations
   orderItems OrderItem[]
   reviews    Review[]
   wishlist   Wishlist[]
-  
+
   @@map("products")
 }
 
 model Order {
-  id          String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String      @db.ObjectId
-  status      OrderStatus @default(PENDING)
-  total       Float
-  subtotal    Float
-  tax         Float
-  shipping    Float
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String      @db.ObjectId
+  status    OrderStatus @default(PENDING)
+  total     Float
+  subtotal  Float
+  tax       Float
+  shipping  Float
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
   // Relations
-  user        User        @relation(fields: [userId], references: [id])
-  items       OrderItem[]
-  
+  user  User        @relation(fields: [userId], references: [id])
+  items OrderItem[]
+
   @@map("orders")
 }
 
@@ -75,11 +75,11 @@ model OrderItem {
   productId String @db.ObjectId
   quantity  Int
   price     Float
-  
+
   // Relations
-  order     Order   @relation(fields: [orderId], references: [id])
-  product   Product @relation(fields: [productId], references: [id])
-  
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
   @@map("order_items")
 }
 
@@ -92,11 +92,11 @@ model Review {
   comment   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
-  user      User    @relation(fields: [userId], references: [id])
-  product   Product @relation(fields: [productId], references: [id])
-  
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
   @@map("reviews")
 }
 
@@ -105,30 +105,30 @@ model Wishlist {
   userId    String   @db.ObjectId
   productId String   @db.ObjectId
   createdAt DateTime @default(now())
-  
+
   // Relations
-  user      User    @relation(fields: [userId], references: [id])
-  product   Product @relation(fields: [productId], references: [id])
-  
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
   @@unique([userId, productId])
   @@map("wishlist")
 }
 
 model BlogPost {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
   title       String
-  slug        String   @unique
+  slug        String    @unique
   excerpt     String
   content     String
   image       String
   author      String
   category    String
   tags        String[]
-  published   Boolean  @default(false)
+  published   Boolean   @default(false)
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
   @@map("blog_posts")
 }
 
