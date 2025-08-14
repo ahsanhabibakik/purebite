@@ -88,38 +88,26 @@ export default function CheckoutPage() {
         clearCart();
         setOrderPlaced(true);
       } else {
-        // Handle online payment via Stripe
-        const response = await fetch('/api/checkout', {
+        // Handle online payment via SSLCommerz
+        const response = await fetch('/api/payment/sslcommerz', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             items,
-            shippingAddress: {
-              fullName: data.fullName,
-              street: data.street,
-              area: data.area,
-              city: data.city,
-              district: data.district,
-              postalCode: data.postalCode,
-              phone: data.phone,
-              email: data.email,
-            },
-            subtotal: totalPrice,
-            tax: 0,
-            shipping: deliveryFee,
-            total: finalTotal,
+            customerInfo: data,
+            totalAmount: finalTotal,
           }),
         });
 
         const result = await response.json();
         
-        if (result.url) {
-          // Redirect to Stripe checkout
-          window.location.href = result.url;
+        if (result.status === 'success' && result.data.GatewayPageURL) {
+          // Redirect to SSLCommerz payment gateway
+          window.location.href = result.data.GatewayPageURL;
         } else {
-          throw new Error('Failed to create checkout session');
+          throw new Error(result.message || 'Failed to create payment session');
         }
       }
     } catch (error) {
