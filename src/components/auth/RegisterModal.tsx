@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/auth";
 import { 
   Dialog,
   DialogContent,
@@ -13,7 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
-import { UserRole } from "@/types/product";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface RegisterModalProps {
   open: boolean;
@@ -33,7 +33,7 @@ export function RegisterModal({ open, onOpenChange, onSwitchToLogin }: RegisterM
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { register } = useAuthStore();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,15 +53,33 @@ export function RegisterModal({ open, onOpenChange, onSwitchToLogin }: RegisterM
     }
 
     try {
-      const success = await register({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        role: UserRole.USER,
-        addresses: [],
+      // Register user
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
       });
-      
-      if (success) {
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'রেজিস্ট্রেশনে সমস্যা');
+      }
+
+      // Auto sign in after successful registration
+      const signInResult = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (signInResult?.error) {
+        setError('অ্যাকাউন্ট তৈরি হয়েছে, কিন্তু লগইন হয়নি');
+      } else {
         onOpenChange(false);
         setFormData({
           name: "",
@@ -70,13 +88,20 @@ export function RegisterModal({ open, onOpenChange, onSwitchToLogin }: RegisterM
           password: "",
           confirmPassword: "",
         });
-      } else {
-        setError("রেজিস্ট্রেশনে সমস্যা হয়েছে");
+        router.refresh();
       }
-    } catch {
-      setError("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    } catch (error: any) {
+      setError(error.message || "কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn("google", { callbackUrl: "/" });
+    } catch {
+      setError("গুগল সাইন ইন এ সমস্যা হয়েছে");
     }
   };
 
@@ -180,6 +205,27 @@ export function RegisterModal({ open, onOpenChange, onSwitchToLogin }: RegisterM
           
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "অ্যাকাউন্ট তৈরি হচ্ছে..." : "অ্যাকাউন্ট তৈরি করুন"}
+          </Button>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                অথবা
+              </span>
+            </div>
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogleSignIn}
+            className="w-full"
+            disabled={isLoading}
+          >
+            গুগল দিয়ে সাইন আপ করুন
           </Button>
           
           <div className="text-center">

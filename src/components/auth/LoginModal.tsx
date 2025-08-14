@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { signIn, getSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/auth";
 import { 
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, LogIn } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface LoginModalProps {
   open: boolean;
@@ -26,8 +27,7 @@ export function LoginModal({ open, onOpenChange, onSwitchToRegister }: LoginModa
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const { login } = useAuthStore();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,18 +35,34 @@ export function LoginModal({ open, onOpenChange, onSwitchToRegister }: LoginModa
     setError("");
 
     try {
-      const success = await login(email, password);
-      if (success) {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("ইমেইল বা পাসওয়ার্ড ভুল");
+      } else {
+        // Refresh the session
+        await getSession();
         onOpenChange(false);
         setEmail("");
         setPassword("");
-      } else {
-        setError("ইমেইল বা পাসওয়ার্ড ভুল");
+        router.refresh();
       }
     } catch {
       setError("কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn("google", { callbackUrl: "/" });
+    } catch {
+      setError("গুগল সাইন ইন এ সমস্যা হয়েছে");
     }
   };
 
@@ -115,6 +131,27 @@ export function LoginModal({ open, onOpenChange, onSwitchToRegister }: LoginModa
           
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "লগইন হচ্ছে..." : "লগইন করুন"}
+          </Button>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                অথবা
+              </span>
+            </div>
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogleSignIn}
+            className="w-full"
+            disabled={isLoading}
+          >
+            গুগল দিয়ে লগইন করুন
           </Button>
           
           <div className="text-center">

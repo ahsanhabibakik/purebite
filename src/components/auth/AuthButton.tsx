@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/auth";
 import { LoginModal } from "./LoginModal";
 import { RegisterModal } from "./RegisterModal";
 import { User, LogOut, Settings, Package, Heart } from "lucide-react";
@@ -19,7 +19,7 @@ import {
 export function AuthButton() {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { data: session, status } = useSession();
 
   const handleSwitchToRegister = () => {
     setShowLogin(false);
@@ -31,7 +31,19 @@ export function AuthButton() {
     setShowLogin(true);
   };
 
-  if (isAuthenticated && user) {
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/" });
+  };
+
+  if (status === "loading") {
+    return (
+      <Button variant="ghost" size="sm" disabled>
+        লোড হচ্ছে...
+      </Button>
+    );
+  }
+
+  if (session?.user) {
     return (
       <>
         <DropdownMenu>
@@ -43,9 +55,9 @@ export function AuthButton() {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user.name}</p>
+                <p className="text-sm font-medium leading-none">{session.user.name || "ব্যবহারকারী"}</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {user.email}
+                  {session.user.email}
                 </p>
               </div>
             </DropdownMenuLabel>
@@ -67,7 +79,7 @@ export function AuthButton() {
               <span>প্রোফাইল সেটিংস</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>লগআউট</span>
             </DropdownMenuItem>
