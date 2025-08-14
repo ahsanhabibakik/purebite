@@ -38,7 +38,7 @@ export default function RootLayout({
         <GoogleAnalytics />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen overflow-x-hidden`}
       >
         {/* Google Tag Manager (noscript) - immediately after opening body tag */}
         <GoogleTagManagerNoScript />

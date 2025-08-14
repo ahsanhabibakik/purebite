@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <main className="flex-1">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+      <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 w-full">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{
@@ -22,7 +22,7 @@ export default function Home() {
           }} />
         </div>
         
-        <div className="container px-4 py-16 md:py-20 lg:py-28 relative">
+        <div className="container mx-auto px-4 py-16 md:py-20 lg:py-28 relative max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Content */}
             <div className="space-y-8 text-center lg:text-left order-2 lg:order-1">
@@ -135,7 +135,7 @@ export default function Home() {
                 </div>
                 
                 {/* Floating Stats Card */}
-                <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-lg p-6 border border-green-100">
+                <div className="absolute -bottom-6 left-0 bg-white rounded-2xl shadow-lg p-6 border border-green-100 hidden sm:block">
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
                       <div className="text-2xl font-bold text-green-600">{products.length}+</div>
@@ -149,7 +149,7 @@ export default function Home() {
                 </div>
                 
                 {/* Floating Delivery Badge */}
-                <div className="absolute -top-4 -right-4 bg-emerald-500 text-white rounded-full p-4 shadow-lg">
+                <div className="absolute -top-4 right-0 bg-emerald-500 text-white rounded-full p-4 shadow-lg hidden sm:block">
                   <div className="text-center">
                     <Truck className="w-6 h-6 mx-auto mb-1" />
                     <div className="text-xs font-bold">২৪ঘন্টা</div>
@@ -173,7 +173,7 @@ export default function Home() {
 
       {/* Categories Section */}
       <section className="py-16 bg-white">
-        <div className="container px-4">
+        <div className="container mx-auto px-4 max-w-7xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">আমাদের ক্যাটাগরিসমূহ</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -214,7 +214,7 @@ export default function Home() {
 
       {/* Featured Products */}
       <section className="py-16 bg-gray-50">
-        <div className="container px-4">
+        <div className="container mx-auto px-4 max-w-7xl">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-2">ফিচার্ড পণ্যসমূহ</h2>
@@ -238,7 +238,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="py-16 bg-white">
-        <div className="container px-4">
+        <div className="container mx-auto px-4 max-w-7xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">কেন PureBite?</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -284,7 +284,7 @@ export default function Home() {
 
       {/* New Products */}
       <section className="py-16 bg-gray-50">
-        <div className="container px-4">
+        <div className="container mx-auto px-4 max-w-7xl">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-2">নতুন পণ্যসমূহ</h2>
@@ -311,7 +311,7 @@ export default function Home() {
 
       {/* Newsletter */}
       <section className="py-16 bg-white">
-        <div className="container px-4">
+        <div className="container mx-auto px-4 max-w-7xl">
           <Newsletter />
         </div>
       </section>
