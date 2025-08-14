@@ -9,7 +9,9 @@
       "Bash(npx prisma generate:*)",
       "Bash(node:*)",
       "Bash(rm:*)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": [],
