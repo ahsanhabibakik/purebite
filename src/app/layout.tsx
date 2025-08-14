@@ -28,19 +28,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const gtmId = process.env.NEXT_PUBLIC_GTM_ID || '';
-  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || '';
-
   return (
     <html lang="en">
       <head>
-        <GoogleTagManager gtmId={gtmId} />
-        <GoogleAnalytics measurementId={gaId} />
+        {/* Google Tag Manager - positioned as high in head as possible */}
+        <GoogleTagManager />
+        <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
-        <GoogleTagManagerNoScript gtmId={gtmId} />
+        {/* Google Tag Manager (noscript) - immediately after opening body tag */}
+        <GoogleTagManagerNoScript />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
