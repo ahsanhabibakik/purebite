@@ -16,7 +16,8 @@
       "Bash(pnpm install:*)",
       "Bash(pnpm db:generate:*)",
       "Bash(pnpm db:push:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(npm run:*)"
     ],
     "deny": [],
     "ask": [],
