@@ -41,6 +41,9 @@ export function Header() {
           <Link href="/categories" className="text-sm font-medium hover:text-green-600 transition-colors">
             ক্যাটাগরি
           </Link>
+          <Link href="/blog" className="text-sm font-medium hover:text-green-600 transition-colors">
+            ব্লগ
+          </Link>
           <Link href="/about" className="text-sm font-medium hover:text-green-600 transition-colors">
             আমাদের সম্পর্কে
           </Link>
