@@ -3,19 +3,24 @@
 import Script from 'next/script';
 
 interface GoogleAnalyticsProps {
-  measurementId: string;
+  measurementId?: string;
 }
 
 export default function GoogleAnalytics({ measurementId }: GoogleAnalyticsProps) {
-  if (!measurementId) {
+  // Use environment variable if measurementId not provided
+  const gaId = measurementId || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || '';
+  
+  if (!gaId) {
     return null;
   }
 
   return (
     <>
+      {/* Google tag (gtag.js) */}
       <Script
+        async
+        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
         strategy="afterInteractive"
-        src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
       />
       <Script
         id="google-analytics"
@@ -25,10 +30,8 @@ export default function GoogleAnalytics({ measurementId }: GoogleAnalyticsProps)
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${measurementId}', {
-              page_title: document.title,
-              page_location: window.location.href,
-            });
+            
+            gtag('config', '${gaId}');
           `,
         }}
       />

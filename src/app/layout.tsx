@@ -33,7 +33,8 @@ export default function RootLayout({
       <head>
         {/* Google Tag Manager - positioned as high in head as possible */}
         <GoogleTagManager />
-        <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''} />
+        {/* Google Analytics 4 - immediately after GTM */}
+        <GoogleAnalytics />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
