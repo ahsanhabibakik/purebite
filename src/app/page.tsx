@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Star, Truck, Shield, Award, Phone } from "lucide-react";
+import { ArrowRight, Truck, Shield, Award, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { products, categories } from "@/data/products";

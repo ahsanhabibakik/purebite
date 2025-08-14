@@ -15,7 +15,6 @@ import {
   Shield, 
   Award,
   ChevronLeft,
-  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";

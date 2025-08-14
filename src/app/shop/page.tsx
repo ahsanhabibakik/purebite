@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Filter, Grid, List, SortAsc } from "lucide-react";
+import { Filter, Grid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { products, categories } from "@/data/products";
@@ -75,7 +75,7 @@ export default function ShopPage() {
           {/* Sort Dropdown */}
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as "name" | "price_low" | "price_high" | "newest")}
             className="border rounded-md px-3 py-1 text-sm"
           >
             <option value="newest">নতুন আগে</option>

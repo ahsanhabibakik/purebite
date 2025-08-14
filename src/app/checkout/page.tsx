@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -15,7 +14,6 @@ import {
   Phone,
   MapPin,
   User,
-  Mail,
   CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,7 +38,6 @@ export default function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
-  const router = useRouter();
 
   const form = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),

@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 import { Search, ShoppingCart, User, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart";
+import { SearchModal } from "@/components/SearchModal";
 
 export function Header() {
   const { toggleCart, getTotalItems } = useCartStore();
   const totalItems = getTotalItems();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
@@ -43,7 +45,12 @@ export function Header() {
         {/* Right Actions */}
         <div className="flex items-center gap-2">
           {/* Search */}
-          <Button variant="ghost" size="sm" className="hidden sm:flex">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="hidden sm:flex"
+            onClick={() => setIsSearchOpen(true)}
+          >
             <Search className="h-4 w-4" />
           </Button>
 
@@ -73,25 +80,12 @@ export function Header() {
           </Button>
         </div>
       </div>
+      
+      <SearchModal 
+        isOpen={isSearchOpen} 
+        onClose={() => setIsSearchOpen(false)} 
+      />
     </header>
   );
 }
 
-function MountainIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
-    </svg>
-  );
-}
