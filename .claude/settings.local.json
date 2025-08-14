@@ -5,7 +5,10 @@
       "Bash(pnpm run dev:*)",
       "Bash(pnpm run lint:*)",
       "Bash(npm run build:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(node:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": [],
