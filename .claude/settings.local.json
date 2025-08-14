@@ -20,7 +20,8 @@
       "Bash(npm run:*)",
       "Bash(cp:*)",
       "Bash(docker run:*)",
-      "Bash(pnpm run:*)"
+      "Bash(pnpm run:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": [],
     "ask": [],
