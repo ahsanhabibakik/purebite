@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartSidebar } from "@/components/CartSidebar";
 import { LiveChat } from "@/components/LiveChat";
+import { AuthProvider } from "@/components/AuthProvider";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import GoogleTagManager, { GoogleTagManagerNoScript } from "@/components/GoogleTagManager";
 
@@ -41,11 +42,13 @@ export default function RootLayout({
       >
         {/* Google Tag Manager (noscript) - immediately after opening body tag */}
         <GoogleTagManagerNoScript />
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <CartSidebar />
-        <LiveChat />
+        <AuthProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <CartSidebar />
+          <LiveChat />
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,24 +16,101 @@ import {
   Shield,
   Calendar,
   User,
-  Send
+  Send,
+  Loader2
 } from "lucide-react";
-import { useReviewsStore, Review } from "@/store/reviews";
 import { Product } from "@/types/product";
 import { cn } from "@/lib/utils";
+import toast from "react-hot-toast";
+
+interface Review {
+  id: string;
+  userId: string;
+  productId: string;
+  rating: number;
+  title?: string;
+  comment: string;
+  verified?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    name?: string;
+  };
+}
+
+interface ReviewStats {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
+}
 
 interface ProductReviewsProps {
   product: Product;
 }
 
 export function ProductReviews({ product }: ProductReviewsProps) {
-  const { getProductReviews, getReviewStats, addReview, markHelpful } = useReviewsStore();
+  const { data: session } = useSession();
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [stats, setStats] = useState<ReviewStats>({
+    averageRating: 0,
+    totalReviews: 0,
+    ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+  });
   const [showWriteReview, setShowWriteReview] = useState(false);
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "highest" | "lowest" | "helpful">("newest");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "highest" | "lowest">("newest");
   const [filterRating, setFilterRating] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const reviews = getProductReviews(product.id);
-  const stats = getReviewStats(product.id);
+  useEffect(() => {
+    fetchReviews();
+  }, [product.id]);
+
+  const fetchReviews = async () => {
+    try {
+      const response = await fetch(`/api/reviews?productId=${product.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setReviews(data.reviews || []);
+        calculateStats(data.reviews || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch reviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateStats = (reviewList: Review[]) => {
+    if (reviewList.length === 0) {
+      setStats({
+        averageRating: 0,
+        totalReviews: 0,
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+      });
+      return;
+    }
+
+    const total = reviewList.length;
+    const sum = reviewList.reduce((acc, review) => acc + review.rating, 0);
+    const average = sum / total;
+
+    const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    reviewList.forEach(review => {
+      distribution[review.rating as keyof typeof distribution]++;
+    });
+
+    setStats({
+      averageRating: average,
+      totalReviews: total,
+      ratingDistribution: distribution
+    });
+  };
 
   // Filter and sort reviews
   const filteredReviews = reviews
@@ -74,14 +152,6 @@ export function ProductReviews({ product }: ProductReviewsProps) {
   };
 
   const ReviewItem = ({ review }: { review: Review }) => {
-    const [hasVoted, setHasVoted] = useState(false);
-    
-    const handleHelpfulVote = (isHelpful: boolean) => {
-      if (!hasVoted) {
-        markHelpful(review.id, isHelpful);
-        setHasVoted(true);
-      }
-    };
 
     const formatDate = (dateString: string) => {
       const date = new Date(dateString);
@@ -122,7 +192,7 @@ export function ProductReviews({ product }: ProductReviewsProps) {
           {/* Review Content */}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <h4 className="font-semibold text-gray-900">{review.userName}</h4>
+              <h4 className="font-semibold text-gray-900">{review.user.name || 'বেনামী গ্রাহক'}</h4>
               {review.verified && (
                 <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                   <Shield className="w-3 h-3 mr-1" />
@@ -140,52 +210,9 @@ export function ProductReviews({ product }: ProductReviewsProps) {
               </span>
             </div>
 
-            <h5 className="font-medium text-gray-900 mb-2">{review.title}</h5>
+            {review.title && <h5 className="font-medium text-gray-900 mb-2">{review.title}</h5>}
             <p className="text-gray-700 leading-relaxed mb-4">{review.comment}</p>
 
-            {/* Review Images */}
-            {review.images && review.images.length > 0 && (
-              <div className="flex gap-2 mb-4">
-                {review.images.map((image, index) => (
-                  <div key={index} className="relative w-20 h-20 rounded border overflow-hidden">
-                    <Image
-                      src={image}
-                      alt={`Review image ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Helpful votes */}
-            <div className="flex items-center gap-4 text-sm">
-              <span className="text-gray-600">এই রিভিউটি কি সহায়ক?</span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleHelpfulVote(true)}
-                  disabled={hasVoted}
-                  className="flex items-center gap-1 text-xs"
-                >
-                  <ThumbsUp className="w-3 h-3" />
-                  হ্যাঁ ({review.helpful})
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleHelpfulVote(false)}
-                  disabled={hasVoted}
-                  className="flex items-center gap-1 text-xs"
-                >
-                  <ThumbsDown className="w-3 h-3" />
-                  না ({review.notHelpful})
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -196,51 +223,58 @@ export function ProductReviews({ product }: ProductReviewsProps) {
     const [rating, setRating] = useState(0);
     const [title, setTitle] = useState("");
     const [comment, setComment] = useState("");
-    const [userName, setUserName] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       
-      if (!rating || !title || !comment || !userName) {
+      if (!rating || !comment) {
+        toast.error('দয়া করে রেটিং এবং মন্তব্য দিন');
+        return;
+      }
+
+      if (!session) {
+        toast.error('রিভিউ লিখতে লগইন করুন');
         return;
       }
 
       setIsSubmitting(true);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      addReview({
-        productId: product.id,
-        userId: `user_${Date.now()}`,
-        userName,
-        rating,
-        title,
-        comment,
-        verified: false
-      });
+      try {
+        const response = await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: product.id,
+            rating,
+            title: title || undefined,
+            comment,
+          }),
+        });
 
-      setRating(0);
-      setTitle("");
-      setComment("");
-      setUserName("");
-      setIsSubmitting(false);
-      setShowWriteReview(false);
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'রিভিউ পাঠাতে সমস্যা');
+        }
+
+        toast.success('রিভিউ সফলভাবে পাঠানো হয়েছে!');
+        
+        setRating(0);
+        setTitle("");
+        setComment("");
+        setShowWriteReview(false);
+        
+        // Refresh reviews
+        fetchReviews();
+      } catch (error: any) {
+        toast.error(error.message);
+      } finally {
+        setIsSubmitting(false);
+      }
     };
 
     return (
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-2">আপনার নাম</label>
-          <Input
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            placeholder="আপনার নাম লিখুন"
-            required
-          />
-        </div>
-
         <div>
           <label className="block text-sm font-medium mb-2">রেটিং দিন</label>
           <div className="flex gap-1">
@@ -307,6 +341,17 @@ export function ProductReviews({ product }: ProductReviewsProps) {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <span className="ml-2 text-gray-600">রিভিউ লোড হচ্ছে...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Rating Summary */}
@@ -355,20 +400,30 @@ export function ProductReviews({ product }: ProductReviewsProps) {
         </h3>
 
         <div className="flex gap-2">
-          <Dialog open={showWriteReview} onOpenChange={setShowWriteReview}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Star className="h-4 w-4" />
-                রিভিউ লিখুন
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>পণ্যের রিভিউ লিখুন</DialogTitle>
-              </DialogHeader>
-              <WriteReviewForm />
-            </DialogContent>
-          </Dialog>
+          {session ? (
+            <Dialog open={showWriteReview} onOpenChange={setShowWriteReview}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <Star className="h-4 w-4" />
+                  রিভিউ লিখুন
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>পণ্যের রিভিউ লিখুন</DialogTitle>
+                </DialogHeader>
+                <WriteReviewForm />
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <Button 
+              onClick={() => toast.error('রিভিউ লিখতে প্রথমে লগইন করুন')}
+              className="flex items-center gap-2"
+            >
+              <Star className="h-4 w-4" />
+              রিভিউ লিখুন
+            </Button>
+          )}
         </div>
       </div>
 
