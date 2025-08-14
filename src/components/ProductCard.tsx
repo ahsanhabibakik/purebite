@@ -8,6 +8,7 @@ import { Product } from "@/types/product";
 import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { useComparisonStore } from "@/store/comparison";
+import { useReviewsStore } from "@/store/reviews";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
@@ -20,6 +21,7 @@ export function ProductCard({ product, className, onQuickView }: ProductCardProp
   const { addItem, openCart } = useCartStore();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlistStore();
   const { addItem: addToComparison, removeItem: removeFromComparison, isInComparison, getTotalItems } = useComparisonStore();
+  const { getReviewStats } = useReviewsStore();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -57,6 +59,8 @@ export function ProductCard({ product, className, onQuickView }: ProductCardProp
   const discountPercentage = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
+
+  const reviewStats = getReviewStats(product.id);
 
   return (
     <div className={cn(
@@ -177,17 +181,27 @@ export function ProductCard({ product, className, onQuickView }: ProductCardProp
             )}
           </div>
           
-          {/* Rating & Reviews (placeholder) */}
+          {/* Rating & Reviews */}
           <div className="mb-3 flex items-center gap-1">
             <div className="flex">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
-                  className="h-3 w-3 fill-yellow-400 text-yellow-400"
+                  className={cn(
+                    "h-3 w-3",
+                    star <= Math.round(reviewStats.averageRating)
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "fill-gray-200 text-gray-200"
+                  )}
                 />
               ))}
             </div>
-            <span className="text-xs text-gray-500">(২৪ রিভিউ)</span>
+            <span className="text-xs text-gray-500">
+              {reviewStats.totalReviews > 0 
+                ? `(${reviewStats.totalReviews} রিভিউ)` 
+                : "(কোন রিভিউ নেই)"
+              }
+            </span>
           </div>
           
           {/* Add to Cart Button */}

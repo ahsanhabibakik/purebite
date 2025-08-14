@@ -9,6 +9,9 @@
     ],
     "deny": [],
     "ask": [],
-    "defaultMode": "acceptEdits"
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "E:\\e\\1code"
+    ]
   }
 }

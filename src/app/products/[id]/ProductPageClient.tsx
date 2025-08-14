@@ -17,7 +17,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductReviews } from "@/components/ProductReviews";
 import { useCartStore } from "@/store/cart";
+import { useReviewsStore } from "@/store/reviews";
 import { Product } from "@/types/product";
 
 interface ProductPageClientProps {
@@ -28,8 +30,10 @@ interface ProductPageClientProps {
 export function ProductPageClient({ product, relatedProducts }: ProductPageClientProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState<"details" | "nutrition" | "reviews">("details");
 
   const { addItem, openCart } = useCartStore();
+  const { getReviewStats } = useReviewsStore();
 
   const handleAddToCart = () => {
     addItem(product, quantity);
@@ -39,6 +43,8 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
   const discountPercentage = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
+
+  const reviewStats = getReviewStats(product.id);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -246,45 +252,69 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
       <div className="mb-12">
         <div className="border-b border-gray-200 mb-6">
           <nav className="flex space-x-8">
-            <button className="border-b-2 border-green-600 pb-2 text-green-600 font-medium">
+            <button 
+              onClick={() => setActiveTab("details")}
+              className={`pb-2 font-medium transition-colors ${
+                activeTab === "details" 
+                  ? "border-b-2 border-green-600 text-green-600" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
               বিস্তারিত তথ্য
             </button>
-            <button className="pb-2 text-gray-600 hover:text-gray-900">
-              পুষ্টিগুণ
-            </button>
-            <button className="pb-2 text-gray-600 hover:text-gray-900">
-              রিভিউ (২৤)
+            {product.nutritionInfo && (
+              <button 
+                onClick={() => setActiveTab("nutrition")}
+                className={`pb-2 font-medium transition-colors ${
+                  activeTab === "nutrition" 
+                    ? "border-b-2 border-green-600 text-green-600" 
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                পুষ্টিগুণ
+              </button>
+            )}
+            <button 
+              onClick={() => setActiveTab("reviews")}
+              className={`pb-2 font-medium transition-colors ${
+                activeTab === "reviews" 
+                  ? "border-b-2 border-green-600 text-green-600" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              রিভিউ ({reviewStats.totalReviews})
             </button>
           </nav>
         </div>
 
         <div className="space-y-6">
-          {/* Product Details */}
-          <div>
-            <h3 className="font-semibold text-lg mb-3">পণ্যের বিবরণ</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <p><strong>ক্যাটাগরি:</strong> {product.subcategory}</p>
-                <p><strong>ওজন/পরিমাণ:</strong> {product.weight}গ্রাম</p>
-                <p><strong>একক:</strong> {product.unit}</p>
-                {product.origin && <p><strong>উৎপাদনস্থল:</strong> {product.origin}</p>}
-                {product.expiryDate && <p><strong>মেয়াদ:</strong> {product.expiryDate}</p>}
-              </div>
-              {product.ingredients && (
-                <div>
-                  <p className="font-medium mb-2">উপাদান:</p>
-                  <ul className="list-disc list-inside space-y-1 text-gray-600">
-                    {product.ingredients.map((ingredient, index) => (
-                      <li key={index}>{ingredient}</li>
-                    ))}
-                  </ul>
+          {/* Tab Content */}
+          {activeTab === "details" && (
+            <div>
+              <h3 className="font-semibold text-lg mb-3">পণ্যের বিবরণ</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <p><strong>ক্যাটাগরি:</strong> {product.subcategory}</p>
+                  <p><strong>ওজন/পরিমাণ:</strong> {product.weight}গ্রাম</p>
+                  <p><strong>একক:</strong> {product.unit}</p>
+                  {product.origin && <p><strong>উৎপাদনস্থল:</strong> {product.origin}</p>}
+                  {product.expiryDate && <p><strong>মেয়াদ:</strong> {product.expiryDate}</p>}
                 </div>
-              )}
+                {product.ingredients && (
+                  <div>
+                    <p className="font-medium mb-2">উপাদান:</p>
+                    <ul className="list-disc list-inside space-y-1 text-gray-600">
+                      {product.ingredients.map((ingredient, index) => (
+                        <li key={index}>{ingredient}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Nutrition Info */}
-          {product.nutritionInfo && (
+          {activeTab === "nutrition" && product.nutritionInfo && (
             <div>
               <h3 className="font-semibold text-lg mb-3">পুষ্টিগুণ (প্রতি ১০০গ্রামে)</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -306,6 +336,10 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                 </div>
               </div>
             </div>
+          )}
+
+          {activeTab === "reviews" && (
+            <ProductReviews product={product} />
           )}
         </div>
       </div>
