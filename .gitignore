@@ -1,9 +1,25 @@
-# Local environment variables
-.env
-.env.local
+# =============================================================================
+# PRODUCTION-READY GITIGNORE FOR VERCEL DEPLOYMENT
+# =============================================================================
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# =============================================================================
+# ENVIRONMENT VARIABLES (CRITICAL - NEVER COMMIT)
+# =============================================================================
+.env
+.env.local
+.env.development
+.env.staging
+.env.production.local
+.env*.local
+
+# Keep .env.example and .env.production for reference
+# !.env.example (already tracked)
+# !.env.production (for Vercel setup reference)
+
+# =============================================================================
+# DEPENDENCIES
+# =============================================================================
 /node_modules
 /.pnp
 .pnp.*
@@ -12,33 +28,149 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+pnpm-lock.yaml*
 
-# testing
-/coverage
-
-# next.js
+# =============================================================================
+# NEXT.JS BUILD FILES
+# =============================================================================
 /.next/
 /out/
+next-env.d.ts
+*.tsbuildinfo
 
-# production
+# =============================================================================
+# PRODUCTION & BUILD ARTIFACTS
+# =============================================================================
 /build
+/dist
+.vercel
+.swc/
 
-# misc
-.DS_Store
-*.pem
+# =============================================================================
+# TESTING & COVERAGE
+# =============================================================================
+/coverage
+/.nyc_output
+/test-results/
+/playwright-report/
+/playwright/.cache/
 
-# debug
+# =============================================================================
+# DATABASE & STORAGE
+# =============================================================================
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+/prisma/migrations/*_init/
+/data/
+
+# =============================================================================
+# LOGS & DEBUG FILES
+# =============================================================================
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# =============================================================================
+# RUNTIME & CACHE FILES
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.tmp
+*.temp
+*.swp
+*~
 
-# vercel
+# =============================================================================
+# SECURITY & CERTIFICATES
+# =============================================================================
+*.pem
+*.key
+*.cert
+*.csr
+/ssl/
+/certificates/
+
+# =============================================================================
+# IDE & EDITOR FILES
+# =============================================================================
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# =============================================================================
+# CLOUD & DEPLOYMENT
+# =============================================================================
 .vercel
+.netlify
+.firebase/
+.gcloud/
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# =============================================================================
+# UPLOADS & USER CONTENT
+# =============================================================================
+/uploads/
+/public/uploads/
+/storage/
+/tmp/
+
+# =============================================================================
+# MONITORING & ANALYTICS
+# =============================================================================
+.sentry/
+newrelic_agent.log
+
+# =============================================================================
+# PACKAGE MANAGER SPECIFIC
+# =============================================================================
+# npm
+npm-debug.log*
+node_modules.tar.gz
+
+# pnpm
+.pnpm-debug.log*
+.pnpm-store/
+
+# Yarn
+.yarn/install-state.gz
+.yarn/build-state.yml
+
+# =============================================================================
+# OS SPECIFIC FILES
+# =============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Linux
+*~
+.nfs*
+
+# =============================================================================
+# DEVELOPMENT & TESTING
+# =============================================================================
+/cypress/videos/
+/cypress/screenshots/
+.nyc_output/
+coverage/
