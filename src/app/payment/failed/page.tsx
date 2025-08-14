@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { XCircle, ArrowRight, RefreshCcw, Phone, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function PaymentFailedPage() {
+function PaymentFailedContent() {
   const searchParams = useSearchParams();
   const [transactionId, setTransactionId] = useState<string>("");
   const [reason, setReason] = useState<string>("");
@@ -131,5 +131,17 @@ export default function PaymentFailedPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentFailedPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8 min-h-[80vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+      </div>
+    }>
+      <PaymentFailedContent />
+    </Suspense>
   );
 }

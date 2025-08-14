@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, ShoppingCart, Home } from "lucide-react";
+import { AlertCircle, ShoppingCart, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function PaymentCancelledPage() {
+function PaymentCancelledContent() {
   const searchParams = useSearchParams();
   const [transactionId, setTransactionId] = useState<string>("");
 
@@ -108,5 +108,17 @@ export default function PaymentCancelledPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentCancelledPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8 min-h-[80vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+      </div>
+    }>
+      <PaymentCancelledContent />
+    </Suspense>
   );
 }
