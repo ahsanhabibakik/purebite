@@ -6,6 +6,7 @@ import { Heart, ShoppingCart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
 import { useCartStore } from "@/store/cart";
+import { useWishlistStore } from "@/store/wishlist";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
@@ -15,12 +16,23 @@ interface ProductCardProps {
 
 export function ProductCard({ product, className }: ProductCardProps) {
   const { addItem, openCart } = useCartStore();
+  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlistStore();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItem(product);
     openCart();
+  };
+
+  const handleWishlistToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
   };
 
   const discountPercentage = product.originalPrice 
@@ -70,13 +82,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
             <Button
               size="sm"
               variant="secondary"
-              className="h-8 w-8 rounded-full p-0"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
+              className={cn(
+                "h-8 w-8 rounded-full p-0",
+                isInWishlist(product.id) ? "bg-red-100 text-red-600 hover:bg-red-200" : ""
+              )}
+              onClick={handleWishlistToggle}
             >
-              <Heart className="h-4 w-4" />
+              <Heart className={cn("h-4 w-4", isInWishlist(product.id) ? "fill-current" : "")} />
             </Button>
           </div>
         </div>

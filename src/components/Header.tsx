@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
-import { Search, ShoppingCart, User, Menu } from "lucide-react";
+import { Search, ShoppingCart, Menu, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart";
+import { useWishlistStore } from "@/store/wishlist";
 import { SearchModal } from "@/components/SearchModal";
+import { AuthButton } from "@/components/auth/AuthButton";
 
 export function Header() {
   const { toggleCart, getTotalItems } = useCartStore();
+  const { getTotalItems: getWishlistItems } = useWishlistStore();
   const totalItems = getTotalItems();
+  const wishlistItems = getWishlistItems();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
@@ -54,6 +58,23 @@ export function Header() {
             <Search className="h-4 w-4" />
           </Button>
 
+          {/* Wishlist */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="relative"
+            asChild
+          >
+            <Link href="/wishlist">
+              <Heart className="h-4 w-4" />
+              {wishlistItems > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+                  {wishlistItems}
+                </span>
+              )}
+            </Link>
+          </Button>
+
           {/* Cart */}
           <Button
             variant="ghost"
@@ -70,9 +91,7 @@ export function Header() {
           </Button>
 
           {/* User Account */}
-          <Button variant="ghost" size="sm">
-            <User className="h-4 w-4" />
-          </Button>
+          <AuthButton />
 
           {/* Mobile Menu */}
           <Button variant="ghost" size="sm" className="md:hidden">
