@@ -1,0 +1,41 @@
+# Coverage configuration for PureBite
+
+[run]
+source = src/
+omit = 
+    src/**/*.test.ts
+    src/**/*.test.tsx
+    src/**/*.spec.ts
+    src/**/*.spec.tsx
+    src/**/*.stories.ts
+    src/**/*.stories.tsx
+    src/**/*.d.ts
+    src/**/index.ts
+    src/**/index.tsx
+    src/app/**/layout.tsx
+    src/app/**/loading.tsx
+    src/app/**/error.tsx
+    src/app/**/not-found.tsx
+    src/middleware.ts
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+
+[html]
+directory = coverage/html
+
+[xml]
+output = coverage/coverage.xml
+
+[json]
+output = coverage/coverage.json
