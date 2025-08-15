@@ -17,7 +17,8 @@ import {
   Calendar,
   Filter,
   Search,
-  RefreshCw
+  RefreshCw,
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -236,7 +237,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Link href="/admin/products">
           <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">
             <Package className="h-8 w-8 text-green-600 mb-3" />
@@ -244,11 +245,20 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-600">Add, edit, and manage your product catalog</p>
           </div>
         </Link>
-        <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">
-          <Users className="h-8 w-8 text-blue-600 mb-3" />
-          <h3 className="font-semibold text-gray-900 mb-2">Customer Management</h3>
-          <p className="text-sm text-gray-600">View and manage customer accounts</p>
-        </div>
+        <Link href="/admin/inventory">
+          <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">
+            <Package className="h-8 w-8 text-orange-600 mb-3" />
+            <h3 className="font-semibold text-gray-900 mb-2">Inventory Management</h3>
+            <p className="text-sm text-gray-600">Monitor stock levels and manage inventory</p>
+          </div>
+        </Link>
+        <Link href="/admin/chat">
+          <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">
+            <MessageCircle className="h-8 w-8 text-blue-600 mb-3" />
+            <h3 className="font-semibold text-gray-900 mb-2">Customer Support</h3>
+            <p className="text-sm text-gray-600">Manage customer chat conversations</p>
+          </div>
+        </Link>
         <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">
           <TrendingUp className="h-8 w-8 text-purple-600 mb-3" />
           <h3 className="font-semibold text-gray-900 mb-2">Analytics & Reports</h3>

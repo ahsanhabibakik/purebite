@@ -4,7 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartSidebar } from "@/components/CartSidebar";
-import { LiveChat } from "@/components/LiveChat";
+import ChatWidget from "@/components/chat/ChatWidget";
 import { AuthProvider } from "@/components/AuthProvider";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import GoogleTagManager, { GoogleTagManagerNoScript } from "@/components/GoogleTagManager";
@@ -47,7 +47,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <CartSidebar />
-          <LiveChat />
+          <ChatWidget />
         </AuthProvider>
       </body>
     </html>
