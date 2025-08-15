@@ -25,7 +25,8 @@
       "Bash(npm install:*)",
       "Bash(mv:*)",
       "Bash(pnpm list:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": [],

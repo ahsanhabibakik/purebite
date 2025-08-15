@@ -1,4 +1,4 @@
-import { prisma } from './prisma';
+import { prisma } from '@/lib/prisma';
 
 // Analytics event types
 export enum AnalyticsEvent {

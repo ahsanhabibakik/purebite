@@ -7,7 +7,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { Product } from '@/types/product';
-import { RecommendationType } from '@prisma/client';
+
+// Temporary type definition since we're having import issues
+type RecommendationType = 'PERSONALIZED' | 'TRENDING' | 'NEW_ARRIVALS' | 'SIMILAR_PRODUCTS' | 'ALSO_VIEWED' | 'ALSO_BOUGHT' | 'PRICE_DROP';
 
 interface RecommendationResult {
   productId: string;
@@ -42,7 +44,7 @@ export function RecommendationSection({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
-  const itemsPerPage = 4; // Number of items to show at once
+  const itemsPerPage = 4;
 
   useEffect(() => {
     fetchRecommendations();
@@ -67,8 +69,8 @@ export function RecommendationSection({
       const response = await fetch(`/api/recommendations?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setRecommendations(data.recommendations);
-        setCurrentIndex(0); // Reset to first page when refreshing
+        setRecommendations(data.recommendations || []);
+        setCurrentIndex(0);
       }
     } catch (error) {
       console.error('Error fetching recommendations:', error);
@@ -79,7 +81,6 @@ export function RecommendationSection({
   };
 
   const handleProductClick = async (product: Product, recType: RecommendationType) => {
-    // Track recommendation click
     if (session?.user) {
       try {
         await fetch('/api/recommendations', {
@@ -116,17 +117,17 @@ export function RecommendationSection({
   if (loading) {
     return (
       <section className={`py-8 ${className}`}>
-        <div className=\"container mx-auto px-4\">
-          <div className=\"flex items-center justify-between mb-6\">
-            <Skeleton className=\"h-8 w-64\" />
-            {showRefresh && <Skeleton className=\"h-10 w-10\" />}
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-6">
+            <Skeleton className="h-8 w-64" />
+            {showRefresh && <Skeleton className="h-10 w-10" />}
           </div>
-          <div className=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6\">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: itemsPerPage }).map((_, index) => (
-              <div key={index} className=\"space-y-4\">
-                <Skeleton className=\"aspect-square w-full\" />
-                <Skeleton className=\"h-4 w-3/4\" />
-                <Skeleton className=\"h-4 w-1/2\" />
+              <div key={index} className="space-y-4">
+                <Skeleton className="aspect-square w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
               </div>
             ))}
           </div>
@@ -136,56 +137,56 @@ export function RecommendationSection({
   }
 
   if (recommendations.length === 0) {
-    return null; // Don't render empty recommendation sections
+    return null;
   }
 
   return (
     <section className={`py-8 ${className}`}>
-      <div className=\"container mx-auto px-4\">
-        <div className=\"flex items-center justify-between mb-6\">
-          <h2 className=\"text-2xl font-bold text-gray-900\">{title}</h2>
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
           
-          <div className=\"flex items-center gap-2\">
+          <div className="flex items-center gap-2">
             {showRefresh && (
               <Button
-                variant=\"outline\"
-                size=\"sm\"
+                variant="outline"
+                size="sm"
                 onClick={() => fetchRecommendations(true)}
                 disabled={refreshing}
-                className=\"p-2\"
+                className="p-2"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
               </Button>
             )}
             
             {recommendations.length > itemsPerPage && (
-              <div className=\"flex gap-1\">
+              <div className="flex gap-1">
                 <Button
-                  variant=\"outline\"
-                  size=\"sm\"
+                  variant="outline"
+                  size="sm"
                   onClick={prevSlide}
                   disabled={!canGoPrev}
-                  className=\"p-2\"
+                  className="p-2"
                 >
-                  <ChevronLeft className=\"w-4 h-4\" />
+                  <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant=\"outline\"
-                  size=\"sm\"
+                  variant="outline"
+                  size="sm"
                   onClick={nextSlide}
                   disabled={!canGoNext}
-                  className=\"p-2\"
+                  className="p-2"
                 >
-                  <ChevronRight className=\"w-4 h-4\" />
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             )}
           </div>
         </div>
 
-        <div className=\"relative overflow-hidden\">
+        <div className="relative overflow-hidden">
           <div 
-            className=\"flex transition-transform duration-300 ease-in-out gap-6\"
+            className="flex transition-transform duration-300 ease-in-out gap-6"
             style={{ 
               transform: `translateX(-${(currentIndex * 100) / itemsPerPage}%)`,
               width: `${(recommendations.length * 100) / itemsPerPage}%`
@@ -194,23 +195,21 @@ export function RecommendationSection({
             {recommendations.map((rec, index) => (
               <div 
                 key={rec.productId} 
-                className=\"flex-shrink-0\"
+                className="flex-shrink-0"
                 style={{ width: `${100 / recommendations.length}%` }}
               >
-                <div className=\"relative\">
+                <div className="relative">
                   <ProductCard 
                     product={rec.product}
                     onClick={() => handleProductClick(rec.product, rec.type)}
                   />
                   
-                  {/* Recommendation reason badge */}
-                  <div className=\"absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full shadow-md\">
+                  <div className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full shadow-md">
                     {rec.reason}
                   </div>
                   
-                  {/* Score indicator for debugging (only show in development) */}
                   {process.env.NODE_ENV === 'development' && (
-                    <div className=\"absolute top-2 right-2 bg-gray-800 text-white text-xs px-2 py-1 rounded-full shadow-md\">
+                    <div className="absolute top-2 right-2 bg-gray-800 text-white text-xs px-2 py-1 rounded-full shadow-md">
                       {(rec.score * 100).toFixed(0)}%
                     </div>
                   )}
@@ -220,9 +219,8 @@ export function RecommendationSection({
           </div>
         </div>
 
-        {/* Pagination dots */}
         {recommendations.length > itemsPerPage && (
-          <div className=\"flex justify-center mt-6 gap-2\">
+          <div className="flex justify-center mt-6 gap-2">
             {Array.from({ 
               length: Math.ceil(recommendations.length / itemsPerPage) 
             }).map((_, index) => {
@@ -247,13 +245,12 @@ export function RecommendationSection({
   );
 }
 
-// Pre-configured recommendation sections
 export function PersonalizedRecommendations(props: Omit<RecommendationSectionProps, 'type' | 'title'>) {
   return (
     <RecommendationSection
       {...props}
-      type=\"PERSONALIZED\"
-      title=\"আপনার জন্য বিশেষ সুপারিশ\"
+      type="PERSONALIZED"
+      title="আপনার জন্য বিশেষ সুপারিশ"
       showRefresh={true}
     />
   );
@@ -263,8 +260,8 @@ export function TrendingRecommendations(props: Omit<RecommendationSectionProps, 
   return (
     <RecommendationSection
       {...props}
-      type=\"TRENDING\"
-      title=\"এই সপ্তাহের জনপ্রিয় পণ্য\"
+      type="TRENDING"
+      title="এই সপ্তাহের জনপ্রিয় পণ্য"
     />
   );
 }
@@ -273,8 +270,8 @@ export function NewArrivalsRecommendations(props: Omit<RecommendationSectionProp
   return (
     <RecommendationSection
       {...props}
-      type=\"NEW_ARRIVALS\"
-      title=\"নতুন এসেছে\"
+      type="NEW_ARRIVALS"
+      title="নতুন এসেছে"
     />
   );
 }
@@ -283,8 +280,8 @@ export function SimilarProductsRecommendations(props: Omit<RecommendationSection
   return (
     <RecommendationSection
       {...props}
-      type=\"SIMILAR_PRODUCTS\"
-      title=\"অনুরূপ পণ্যসমূহ\"
+      type="SIMILAR_PRODUCTS"
+      title="অনুরূপ পণ্যসমূহ"
     />
   );
 }
@@ -293,8 +290,8 @@ export function AlsoViewedRecommendations(props: Omit<RecommendationSectionProps
   return (
     <RecommendationSection
       {...props}
-      type=\"ALSO_VIEWED\"
-      title=\"অন্যরা যা দেখেছেন\"
+      type="ALSO_VIEWED"
+      title="অন্যরা যা দেখেছেন"
     />
   );
 }
@@ -303,8 +300,8 @@ export function AlsoBoughtRecommendations(props: Omit<RecommendationSectionProps
   return (
     <RecommendationSection
       {...props}
-      type=\"ALSO_BOUGHT\"
-      title=\"অন্যরা যা কিনেছেন\"
+      type="ALSO_BOUGHT"
+      title="অন্যরা যা কিনেছেন"
     />
   );
 }
@@ -313,8 +310,8 @@ export function PriceDropRecommendations(props: Omit<RecommendationSectionProps,
   return (
     <RecommendationSection
       {...props}
-      type=\"PRICE_DROP\"
-      title=\"দামে ছাড়ের পণ্যসমূহ\"
+      type="PRICE_DROP"
+      title="দামে ছাড়ের পণ্যসমূহ"
     />
   );
 }
