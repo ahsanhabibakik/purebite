@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { ArrowRight, Truck, Shield, Award, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
@@ -9,9 +9,9 @@ import { Testimonials } from "@/components/Testimonials";
 import { PersonalizedRecommendations, TrendingRecommendations, NewArrivalsRecommendations, PriceDropRecommendations } from "@/components/recommendations/RecommendationSection";
 import { products, categories } from "@/data/products";
 
-export default function Home() {
-  const t = useTranslations('homepage');
-  const tCommon = useTranslations('common');
+export default async function Home() {
+  const t = await getTranslations('homepage');
+  const tCommon = await getTranslations('common');
   const featuredProducts = products.filter(p => p.featured).slice(0, 8);
   const newProducts = products.slice(0, 4);
 

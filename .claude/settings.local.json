@@ -29,7 +29,8 @@
       "Bash(sed:*)",
       "Bash(timeout 30 npm run build)",
       "Bash(mkdir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": [],

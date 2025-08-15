@@ -9,8 +9,7 @@ import { Footer } from "@/components/Footer";
 import { CartSidebar } from "@/components/CartSidebar";
 import ChatWidget from "@/components/chat/ChatWidget";
 import { AuthProvider } from "@/components/AuthProvider";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
-import GoogleTagManager, { GoogleTagManagerNoScript } from "@/components/GoogleTagManager";
+import { ClientProviders } from "@/components/ClientProviders";
 import { locales, type Locale, localeNames } from '@/i18n/config';
 
 const geistSans = Geist({
@@ -110,28 +109,15 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} dir="ltr">
-      <head>
-        {/* Google Tag Manager - positioned as high in head as possible */}
-        <GoogleTagManager />
-        {/* Google Analytics 4 - immediately after GTM */}
-        <GoogleAnalytics />
-      </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen overflow-x-hidden`}
-      >
-        {/* Google Tag Manager (noscript) - immediately after opening body tag */}
-        <GoogleTagManagerNoScript />
-        <NextIntlClientProvider messages={messages}>
-          <AuthProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <CartSidebar />
-            <ChatWidget />
-          </AuthProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider messages={messages}>
+      <AuthProvider>
+        <Header />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <CartSidebar />
+        <ChatWidget />
+        <ClientProviders />
+      </AuthProvider>
+    </NextIntlClientProvider>
   );
 }

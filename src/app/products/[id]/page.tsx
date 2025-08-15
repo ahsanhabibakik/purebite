@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import { products } from "@/data/products";
 import { ProductPageClient } from "./ProductPageClient";
 
+export const dynamic = 'force-dynamic';
+
 interface ProductPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export async function generateStaticParams() {
@@ -13,7 +15,7 @@ export async function generateStaticParams() {
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = await params;
+  const { id } = params;
   const product = products.find(p => p.id === id);
 
   if (!product) {

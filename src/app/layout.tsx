@@ -10,6 +10,8 @@ import GoogleAnalytics from "@/components/GoogleAnalytics";
 import GoogleTagManager, { GoogleTagManagerNoScript } from "@/components/GoogleTagManager";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PerformanceMonitor from "@/components/PerformanceMonitor";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,13 +71,13 @@ export const viewport: Viewport = {
   themeColor: '#22c55e',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
         {/* PWA manifest and theme color */}
         <meta name="theme-color" content="#22c55e" />
@@ -115,18 +117,11 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen overflow-x-hidden`}
+        suppressHydrationWarning
       >
         {/* Google Tag Manager (noscript) - immediately after opening body tag */}
         <GoogleTagManagerNoScript />
-        <AuthProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <CartSidebar />
-          <ChatWidget />
-          <PWAInstallPrompt />
-          <PerformanceMonitor />
-        </AuthProvider>
+        {children}
       </body>
     </html>
   );

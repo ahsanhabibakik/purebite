@@ -1,13 +1,15 @@
 import { getRequestConfig } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import { locales } from './config';
+import { locales, defaultLocale, Locale } from './config';
 
 export default getRequestConfig(async ({ locale }) => {
-  // Validate that the incoming `locale` parameter is valid
-  if (!locales.includes(locale as any)) notFound();
+  // Fallback to default locale if missing/invalid to support non-localized routes
+  const resolvedLocale: Locale = locales.includes(locale as any)
+    ? (locale as Locale)
+    : defaultLocale;
 
   return {
-    messages: (await import(`../messages/${locale}.json`)).default,
+  locale: resolvedLocale,
+    messages: (await import(`../messages/${resolvedLocale}.json`)).default,
     timeZone: 'Asia/Dhaka',
     formats: {
       dateTime: {
