@@ -81,28 +81,33 @@ model VerificationToken {
 }
 
 model Product {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  description String
-  price       Float
-  salePrice   Float?
-  image       String
-  images      String[]
-  category    String
-  tags        String[]
-  inStock     Boolean  @default(true)
-  stockCount  Int      @default(0)
-  rating      Float    @default(0)
-  reviewCount Int      @default(0)
-  embedding   Float[] // Vector embedding for RAG
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  description     String
+  price           Float
+  salePrice       Float?
+  image           String
+  images          String[]
+  category        String
+  tags            String[]
+  inStock         Boolean  @default(true)
+  stockCount      Int      @default(0)
+  lowStockThreshold Int    @default(5)
+  reservedStock   Int      @default(0) // Stock reserved for pending orders
+  reorderLevel    Int      @default(10)
+  isStockTracked  Boolean  @default(true)
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  embedding       Float[]  // Vector embedding for RAG
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
-  orderItems OrderItem[]
-  reviews    Review[]
-  wishlist   Wishlist[]
-  cartItems  CartItem[]
+  orderItems      OrderItem[]
+  reviews         Review[]
+  wishlist        Wishlist[]
+  cartItems       CartItem[]
+  stockMovements  StockMovement[]
 
   @@map("products")
 }
@@ -334,6 +339,37 @@ model NewsletterSubscription {
   @@map("newsletter_subscriptions")
 }
 
+model StockMovement {
+  id          String            @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String            @db.ObjectId
+  type        StockMovementType
+  quantity    Int
+  previousStock Int
+  newStock    Int
+  reason      String?
+  reference   String?           // Order ID, adjustment ID, etc.
+  userId      String?           @db.ObjectId
+  createdAt   DateTime          @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("stock_movements")
+}
+
+model StockAlert {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String           @db.ObjectId
+  type        StockAlertType
+  currentStock Int
+  threshold   Int
+  isResolved  Boolean          @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("stock_alerts")
+}
+
 // Enums
 enum UserRole {
   CUSTOMER
@@ -375,4 +411,21 @@ enum NotificationType {
   PROMOTION
   SYSTEM
   REVIEW_REMINDER
+}
+
+enum StockMovementType {
+  PURCHASE        // Stock added from supplier
+  SALE           // Stock reduced from sale
+  ADJUSTMENT     // Manual stock adjustment
+  DAMAGE         // Stock removed due to damage
+  RETURN         // Stock added back from return
+  RESERVE        // Stock reserved for pending order
+  RELEASE        // Reserved stock released
+  TRANSFER       // Stock transfer between locations
+}
+
+enum StockAlertType {
+  LOW_STOCK      // Below low stock threshold
+  OUT_OF_STOCK   // Zero stock
+  REORDER_POINT  // Below reorder level
 }

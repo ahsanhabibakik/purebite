@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import InventoryService from '@/lib/inventory';
 
 export async function GET(request: NextRequest) {
   try {
@@ -92,49 +93,61 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     const { items, shippingAddress, paymentMethod, total, subtotal, tax, shipping } = data;
 
+    // Check stock availability for all items
+    for (const item of items) {
+      const availability = await InventoryService.checkAvailability(item.productId, item.quantity);
+      if (!availability.available) {
+        return NextResponse.json(
+          { 
+            error: `Insufficient stock for product ${item.productId}. Available: ${availability.availableQuantity}, Requested: ${item.quantity}` 
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Generate unique order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
-    const order = await prisma.order.create({
-      data: {
-        userId: user.id,
-        orderNumber,
-        total: parseFloat(total),
-        subtotal: parseFloat(subtotal),
-        tax: parseFloat(tax || '0'),
-        shipping: parseFloat(shipping || '0'),
-        status: 'PENDING',
-        paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
-        shippingAddress: JSON.stringify(shippingAddress),
-        currency: 'BDT',
-        items: {
-          create: items.map((item: any) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-        },
-      },
-      include: {
-        items: {
-          include: {
-            product: true,
+    // Create order and process inventory in a transaction
+    const order = await prisma.$transaction(async (tx) => {
+      // Create the order
+      const newOrder = await tx.order.create({
+        data: {
+          userId: user.id,
+          orderNumber,
+          total: parseFloat(total),
+          subtotal: parseFloat(subtotal),
+          tax: parseFloat(tax || '0'),
+          shipping: parseFloat(shipping || '0'),
+          status: 'PENDING',
+          paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
+          shippingAddress: JSON.stringify(shippingAddress),
+          currency: 'BDT',
+          items: {
+            create: items.map((item: any) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              price: item.price,
+            })),
           },
         },
-      },
-    });
-
-    // Update product stock
-    for (const item of items) {
-      await prisma.product.update({
-        where: { id: item.productId },
-        data: {
-          stockCount: {
-            decrement: item.quantity,
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
           },
         },
       });
-    }
+
+      // Reserve stock for each item
+      for (const item of items) {
+        await InventoryService.reserveStock(item.productId, item.quantity, newOrder.id);
+      }
+
+      return newOrder;
+    });
 
     // Send email notifications
     try {
