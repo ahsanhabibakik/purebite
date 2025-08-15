@@ -1,5 +1,14 @@
 import { prisma } from '@/lib/db';
-import { nanoid } from 'nanoid';
+
+// Simple token generator
+function generateToken(length = 16): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
 
 interface CreateSharedWishlistData {
   title?: string;
@@ -47,7 +56,7 @@ export class WishlistService {
     userId: string,
     data: CreateSharedWishlistData = {}
   ) {
-    const shareToken = nanoid(16);
+    const shareToken = generateToken(16);
     
     return prisma.sharedWishlist.create({
       data: {

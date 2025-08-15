@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
-import { ProductReviews } from "@/components/ProductReviews";
+import ReviewSection from "@/components/reviews/ReviewSection";
 import { useCartStore } from "@/store/cart";
 import { useReviewsStore } from "@/store/reviews";
 import { Product } from "@/types/product";
@@ -339,7 +339,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
           )}
 
           {activeTab === "reviews" && (
-            <ProductReviews product={product} />
+            <ReviewSection productId={product.id} />
           )}
         </div>
       </div>
