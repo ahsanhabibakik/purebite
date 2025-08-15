@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PureBite - Test Coverage Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .metric-name {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .metric-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-excellent { background: #28a745; }
+        .progress-good { background: #ffc107; }
+        .progress-warning { background: #fd7e14; }
+        .progress-danger { background: #dc3545; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .summary-item h4 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-item p {
+            opacity: 0.9;
+        }
+
+        .threshold-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 4px;
+        }
+
+        .threshold-info h4 {
+            color: #1976d2;
+            margin-bottom: 0.5rem;
+        }
+
+        .links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .link-button {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .link-button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .timestamp {
+            text-align: center;
+            color: white;
+            margin-top: 2rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 PureBite Test Coverage Dashboard</h1>
+            <p>Comprehensive testing and code quality metrics</p>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-item">
+                <h4 id="overall-coverage">--</h4>
+                <p>Overall Coverage</p>
+            </div>
+            <div class="summary-item">
+                <h4 id="test-count">--</h4>
+                <p>Total Tests</p>
+            </div>
+            <div class="summary-item">
+                <h4 id="files-tested">--</h4>
+                <p>Files Tested</p>
+            </div>
+            <div class="summary-item">
+                <h4 id="status-indicator">--</h4>
+                <p>Status</p>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3>📊 Coverage Metrics</h3>
+                <div id="coverage-metrics"></div>
+                
+                <div class="threshold-info">
+                    <h4>Coverage Thresholds</h4>
+                    <p>Global: ≥70% | Components: ≥75% | Libraries: ≥65%</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🎯 Quality Gates</h3>
+                <div id="quality-gates"></div>
+            </div>
+
+            <div class="card">
+                <h3>📁 Directory Coverage</h3>
+                <div id="directory-coverage"></div>
+            </div>
+
+            <div class="card">
+                <h3>⚠️ Uncovered Files</h3>
+                <div id="uncovered-files"></div>
+            </div>
+        </div>
+
+        <div class="links">
+            <a href="../coverage/lcov-report/index.html" class="link-button">📈 Detailed HTML Report</a>
+            <a href="../test-results/" class="link-button">🎭 E2E Test Results</a>
+            <a href="../coverage-reports/detailed-summary.json" class="link-button">📄 JSON Report</a>
+            <a href="../coverage-reports/README.md" class="link-button">📋 Markdown Summary</a>
+        </div>
+
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <script>
+        async function loadCoverageData() {
+            try {
+                // Load detailed summary
+                const summaryResponse = await fetch('../coverage-reports/detailed-summary.json');
+                const summary = await summaryResponse.json();
+
+                // Load directory coverage
+                const dirResponse = await fetch('../coverage-reports/directory-coverage.json');
+                const directoryData = await dirResponse.json();
+
+                // Load uncovered files
+                const uncoveredResponse = await fetch('../coverage-reports/uncovered-files.json');
+                const uncoveredData = await uncoveredResponse.json();
+
+                renderDashboard(summary, directoryData, uncoveredData);
+            } catch (error) {
+                console.error('Failed to load coverage data:', error);
+                renderErrorState();
+            }
+        }
+
+        function renderDashboard(summary, directoryData, uncoveredData) {
+            // Update summary grid
+            document.getElementById('overall-coverage').textContent = 
+                Math.round((summary.overall.statements.percentage + summary.overall.branches.percentage + 
+                           summary.overall.functions.percentage + summary.overall.lines.percentage) / 4) + '%';
+            
+            document.getElementById('status-indicator').textContent = summary.status.overall ? '✅ PASS' : '❌ FAIL';
+            document.getElementById('timestamp').textContent = 
+                'Last updated: ' + new Date(summary.timestamp).toLocaleString();
+
+            // Render coverage metrics
+            renderCoverageMetrics(summary);
+            
+            // Render quality gates
+            renderQualityGates(summary);
+            
+            // Render directory coverage
+            renderDirectoryCoverage(directoryData);
+            
+            // Render uncovered files
+            renderUncoveredFiles(uncoveredData);
+        }
+
+        function renderCoverageMetrics(summary) {
+            const container = document.getElementById('coverage-metrics');
+            const metrics = ['statements', 'branches', 'functions', 'lines'];
+            
+            container.innerHTML = metrics.map(metric => {
+                const data = summary.overall[metric];
+                const percentage = data.percentage;
+                const status = summary.status[metric];
+                
+                return `
+                    <div class="metric">
+                        <div>
+                            <div class="metric-name">${metric.charAt(0).toUpperCase() + metric.slice(1)}</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill ${getProgressClass(percentage)}" 
+                                     style="width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-value" style="color: ${getStatusColor(status)}">
+                            ${percentage}%
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderQualityGates(summary) {
+            const container = document.getElementById('quality-gates');
+            const gates = [
+                { name: 'Coverage Threshold', status: summary.status.overall },
+                { name: 'Statements', status: summary.status.statements },
+                { name: 'Branches', status: summary.status.branches },
+                { name: 'Functions', status: summary.status.functions },
+                { name: 'Lines', status: summary.status.lines }
+            ];
+            
+            container.innerHTML = gates.map(gate => `
+                <div class="metric">
+                    <span class="metric-name">${gate.name}</span>
+                    <span class="status-badge ${gate.status ? 'status-pass' : 'status-fail'}">
+                        ${gate.status ? 'PASS' : 'FAIL'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function renderDirectoryCoverage(directoryData) {
+            const container = document.getElementById('directory-coverage');
+            const directories = Object.entries(directoryData)
+                .sort(([,a], [,b]) => b.statements.pct - a.statements.pct)
+                .slice(0, 10);
+            
+            if (directories.length === 0) {
+                container.innerHTML = '<p>No directory data available</p>';
+                return;
+            }
+            
+            container.innerHTML = directories.map(([dir, data]) => `
+                <div class="metric">
+                    <div>
+                        <div class="metric-name">${dir}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${getProgressClass(data.statements.pct)}" 
+                                 style="width: ${data.statements.pct}%"></div>
+                        </div>
+                    </div>
+                    <div class="metric-value">${data.statements.pct}%</div>
+                </div>
+            `).join('');
+        }
+
+        function renderUncoveredFiles(uncoveredData) {
+            const container = document.getElementById('uncovered-files');
+            const files = uncoveredData.files.slice(0, 10);
+            
+            if (files.length === 0) {
+                container.innerHTML = '<p style="color: #28a745; font-weight: 600;">🎉 All files meet coverage thresholds!</p>';
+                return;
+            }
+            
+            container.innerHTML = files.map(file => `
+                <div class="metric">
+                    <div class="metric-name" style="font-size: 0.9rem;">${file.file}</div>
+                    <div class="metric-value" style="color: ${getStatusColor(false)}">${file.statements}%</div>
+                </div>
+            `).join('');
+        }
+
+        function getProgressClass(percentage) {
+            if (percentage >= 80) return 'progress-excellent';
+            if (percentage >= 70) return 'progress-good';
+            if (percentage >= 50) return 'progress-warning';
+            return 'progress-danger';
+        }
+
+        function getStatusColor(status) {
+            return status ? '#28a745' : '#dc3545';
+        }
+
+        function renderErrorState() {
+            document.querySelector('.dashboard').innerHTML = `
+                <div class="card">
+                    <h3>⚠️ Error Loading Coverage Data</h3>
+                    <p>Please run the test suite to generate coverage reports:</p>
+                    <pre style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem;">npm run test:coverage:report</pre>
+                </div>
+            `;
+        }
+
+        // Initialize dashboard
+        loadCoverageData();
+    </script>
+</body>
+</html>
