@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -14,10 +14,13 @@ import {
   Phone,
   MapPin,
   User,
-  CheckCircle
+  CheckCircle,
+  Tag,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart";
+import { useSession } from "next-auth/react";
 
 const checkoutSchema = z.object({
   fullName: z.string().min(2, "নাম কমপক্ষে ২ অক্ষরের হতে হবে"),
@@ -34,10 +37,23 @@ const checkoutSchema = z.object({
 
 type CheckoutForm = z.infer<typeof checkoutSchema>;
 
+interface CouponValidationResult {
+  isValid: boolean;
+  errorMessage?: string;
+  discount: number;
+  finalAmount: number;
+  couponId?: string;
+}
+
 export default function CheckoutPage() {
+  const { data: session } = useSession();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [autoAppliedCoupons, setAutoAppliedCoupons] = useState<any[]>([]);
 
   const form = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
@@ -48,7 +64,95 @@ export default function CheckoutPage() {
 
   const totalPrice = getTotalPrice();
   const deliveryFee = totalPrice >= 500 ? 0 : 60;
-  const finalTotal = totalPrice + deliveryFee;
+  const subtotal = totalPrice + deliveryFee;
+  const discount = appliedCoupon?.discount || 0;
+  const finalTotal = subtotal - discount;
+
+  // Auto-apply coupons on load
+  useEffect(() => {
+    if (session?.user && items.length > 0) {
+      checkAutoApplyCoupons();
+    }
+  }, [session, items]);
+
+  const checkAutoApplyCoupons = async () => {
+    if (!session?.user?.email) return;
+
+    try {
+      const cartItems = items.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.product.price,
+      }));
+
+      const response = await fetch('/api/coupons/auto-apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cartItems,
+          subtotal,
+        }),
+      });
+
+      if (response.ok) {
+        const autoApplicable = await response.json();
+        if (autoApplicable.length > 0) {
+          setAutoAppliedCoupons(autoApplicable);
+          // Apply the best auto-applicable coupon
+          const bestCoupon = autoApplicable[0];
+          setAppliedCoupon({
+            isValid: true,
+            discount: bestCoupon.calculatedDiscount,
+            finalAmount: subtotal - bestCoupon.calculatedDiscount,
+            couponId: bestCoupon.id,
+          });
+          setCouponCode(bestCoupon.code);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking auto-apply coupons:', error);
+    }
+  };
+
+  const validateCoupon = async () => {
+    if (!couponCode.trim() || !session?.user?.email) return;
+
+    setCouponLoading(true);
+    try {
+      const cartItems = items.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.product.price,
+      }));
+
+      const response = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          couponCode: couponCode.trim(),
+          cartItems,
+          subtotal,
+        }),
+      });
+
+      const result = await response.json();
+      setAppliedCoupon(result);
+
+      if (!result.isValid) {
+        alert(result.errorMessage || 'কুপন কোড সঠিক নয়');
+      }
+    } catch (error) {
+      console.error('Error validating coupon:', error);
+      alert('কুপন যাচাই করতে সমস্যা হয়েছে');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+  };
 
   if (items.length === 0 && !orderPlaced) {
     return (
@@ -77,8 +181,12 @@ export default function CheckoutPage() {
         const orderData = {
           items,
           customerInfo: data,
+          subtotal: totalPrice,
+          deliveryFee,
+          discount,
           totalAmount: finalTotal,
           paymentMethod: data.paymentMethod,
+          couponId: appliedCoupon?.couponId,
           orderDate: new Date()
         };
 
@@ -97,7 +205,11 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             items,
             customerInfo: data,
+            subtotal: totalPrice,
+            deliveryFee,
+            discount,
             totalAmount: finalTotal,
+            couponId: appliedCoupon?.couponId,
           }),
         });
 
@@ -402,6 +514,66 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Coupon Section */}
+              <div className="border-t border-gray-200 pt-4 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Tag className="h-4 w-4 text-green-600" />
+                  <h3 className="font-medium text-gray-900">কুপন কোড</h3>
+                </div>
+                
+                {appliedCoupon?.isValid ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-800">
+                          কুপন প্রয়োগ করা হয়েছে: {couponCode}
+                        </p>
+                        <p className="text-sm text-green-600">
+                          ছাড়: ৳{discount.toFixed(2)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={removeCoupon}
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="কুপন কোড লিখুন"
+                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      onKeyPress={(e) => e.key === 'Enter' && validateCoupon()}
+                    />
+                    <Button
+                      type="button"
+                      onClick={validateCoupon}
+                      disabled={!couponCode.trim() || couponLoading}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {couponLoading ? 'যাচাই...' : 'প্রয়োগ'}
+                    </Button>
+                  </div>
+                )}
+
+                {session?.user && (
+                  <div className="mt-2">
+                    <Link 
+                      href="/coupons" 
+                      className="text-sm text-green-600 hover:text-green-700 underline"
+                    >
+                      উপলব্ধ কুপন দেখুন
+                    </Link>
+                  </div>
+                )}
+              </div>
+
               {/* Pricing Breakdown */}
               <div className="border-t border-gray-200 pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
@@ -414,9 +586,15 @@ export default function CheckoutPage() {
                     {deliveryFee === 0 ? "ফ্রি" : `৳${deliveryFee}`}
                   </span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>কুপন ছাড়:</span>
+                    <span>-৳{discount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-semibold text-lg border-t border-gray-200 pt-2">
                   <span>মোট:</span>
-                  <span>৳{finalTotal}</span>
+                  <span>৳{finalTotal.toFixed(2)}</span>
                 </div>
               </div>
 

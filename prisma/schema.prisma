@@ -31,6 +31,7 @@ model User {
   orders       Order[]
   reviews      Review[]
   wishlist     Wishlist[]
+  sharedWishlists SharedWishlist[]
   coupons      UserCoupon[]
   cartItems    CartItem[]
   notifications Notification[]
@@ -196,6 +197,26 @@ model Wishlist {
 
   @@unique([userId, productId])
   @@map("wishlist")
+}
+
+model SharedWishlist {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  shareToken  String   @unique // Unique token for sharing
+  title       String   @default("আমার উইশলিস্ট")
+  description String?
+  isPublic    Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime?
+  viewCount   Int      @default(0)
+  lastViewAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("shared_wishlists")
 }
 
 model BlogPost {
