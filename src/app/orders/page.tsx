@@ -15,7 +15,8 @@ import {
   MapPin,
   Calendar,
   ShoppingBag,
-  Loader2
+  Loader2,
+  ExternalLink
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -243,15 +244,30 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setSelectedOrder(selectedOrder === order.id ? null : order.id)}
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  {selectedOrder === order.id ? "বিস্তারিত লুকান" : "বিস্তারিত দেখুন"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedOrder(selectedOrder === order.id ? null : order.id)}
+                    className="flex items-center gap-2"
+                  >
+                    <Eye className="h-4 w-4" />
+                    {selectedOrder === order.id ? "বিস্তারিত লুকান" : "বিস্তারিত দেখুন"}
+                  </Button>
+                  
+                  {(order.status === 'shipped' || order.status === 'delivered') && (
+                    <Link href={`/orders/${order.id}/tracking`}>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Truck className="h-4 w-4" />
+                        ট্র্যাক করুন
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
 
               {/* Order Details */}

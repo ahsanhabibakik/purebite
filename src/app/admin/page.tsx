@@ -18,7 +18,8 @@ import {
   Filter,
   Search,
   RefreshCw,
-  MessageCircle
+  MessageCircle,
+  Truck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -237,7 +238,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <Link href="/admin/products">
           <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">
             <Package className="h-8 w-8 text-green-600 mb-3" />
@@ -257,6 +258,13 @@ export default function AdminDashboard() {
             <MessageCircle className="h-8 w-8 text-blue-600 mb-3" />
             <h3 className="font-semibold text-gray-900 mb-2">Customer Support</h3>
             <p className="text-sm text-gray-600">Manage customer chat conversations</p>
+          </div>
+        </Link>
+        <Link href="/admin/orders/tracking">
+          <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">
+            <Truck className="h-8 w-8 text-purple-600 mb-3" />
+            <h3 className="font-semibold text-gray-900 mb-2">Order Tracking</h3>
+            <p className="text-sm text-gray-600">Manage shipping and delivery tracking</p>
           </div>
         </Link>
         <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">

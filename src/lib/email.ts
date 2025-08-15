@@ -43,6 +43,17 @@ interface OrderEmailData {
   estimatedDelivery?: string;
 }
 
+// Order status update email data
+interface OrderStatusUpdateData {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  status: string;
+  trackingNumber?: string;
+  estimatedDelivery?: string;
+  currentLocation?: string;
+}
+
 // Create nodemailer transporter
 function createTransporter(): nodemailer.Transporter {
   const config: EmailConfig = {
@@ -176,13 +187,21 @@ export function createOrderConfirmationEmail(data: OrderEmailData): EmailTemplat
             </div>
           </div>
 
+          <!-- Tracking Button -->
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${process.env.NEXTAUTH_URL}/orders/${data.orderNumber.replace('ORD-', '')}/tracking" 
+               style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              🚚 অর্ডার ট্র্যাক করুন
+            </a>
+          </div>
+
           <!-- Next Steps -->
           <div style="background-color: #fffbeb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #f59e0b;">
             <h3 style="margin: 0 0 16px 0; color: #92400e; font-size: 18px;">পরবর্তী ধাপ</h3>
             <ul style="margin: 0; padding-left: 20px; color: #92400e;">
               <li>আমরা আপনার অর্ডার প্রস্তুত করা শুরু করেছি</li>
               <li>১-২ ঘন্টার মধ্যে কনফার্মেশন কল পাবেন</li>
-              <li>২৪ ঘন্টার মধ্যে ডেলিভারি হবে</li>
+              <li>২৤ ঘন্টার মধ্যে ডেলিভারি হবে</li>
               <li>SMS এ ট্র্যাকিং তথ্য পাবেন</li>
             </ul>
           </div>
@@ -420,6 +439,166 @@ export function createNewsletterWelcomeEmail(email: string, name?: string): Emai
   return {
     to: email,
     subject: 'PureBite নিউজলেটারে স্বাগতম! 🌿',
+    html,
+  };
+}
+
+// Order status update email template
+export function createOrderStatusUpdateEmail(data: OrderStatusUpdateData): EmailTemplate {
+  const statusEmojis: Record<string, string> = {
+    'CONFIRMED': '✅',
+    'PROCESSING': '📦',
+    'SHIPPED': '🚚',
+    'DELIVERED': '🎉',
+  };
+
+  const statusLabels: Record<string, string> = {
+    'CONFIRMED': 'নিশ্চিত',
+    'PROCESSING': 'প্রস্তুতি চলছে',
+    'SHIPPED': 'পাঠানো হয়েছে',
+    'DELIVERED': 'ডেলিভার সম্পন্ন',
+  };
+
+  const statusColors: Record<string, string> = {
+    'CONFIRMED': '#2563eb',
+    'PROCESSING': '#7c3aed',
+    'SHIPPED': '#16a34a',
+    'DELIVERED': '#16a34a',
+  };
+
+  const emoji = statusEmojis[data.status] || '📋';
+  const label = statusLabels[data.status] || data.status;
+  const color = statusColors[data.status] || '#6b7280';
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="bn">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Order Update - ${data.orderNumber}</title>
+    </head>
+    <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, ${color} 0%, ${color}dd 100%); color: white; padding: 32px 24px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">PureBite</h1>
+          <p style="margin: 8px 0 0 0; opacity: 0.9;">অর্ডার আপডেট</p>
+        </div>
+
+        <!-- Status Update -->
+        <div style="padding: 32px 24px;">
+          <div style="text-align: center; margin-bottom: 32px;">
+            <div style="background-color: ${color}20; width: 80px; height: 80px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+              <span style="font-size: 40px;">${emoji}</span>
+            </div>
+            <h2 style="margin: 0; color: ${color}; font-size: 24px;">${label}</h2>
+            <p style="margin: 8px 0 0 0; color: #666;">আপনার অর্ডার স্ট্যাটাস আপডেট হয়েছে</p>
+          </div>
+
+          <!-- Order Details -->
+          <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+            <h3 style="margin: 0 0 16px 0; color: #374151; font-size: 18px;">অর্ডার বিবরণ</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">অর্ডার নম্বর</p>
+                <p style="margin: 4px 0 0 0; font-weight: bold; color: ${color};">${data.orderNumber}</p>
+              </div>
+              <div>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">বর্তমান স্ট্যাটাস</p>
+                <p style="margin: 4px 0 0 0; font-weight: bold;">${label}</p>
+              </div>
+              ${data.trackingNumber ? `
+              <div>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">ট্র্যাকিং নম্বর</p>
+                <p style="margin: 4px 0 0 0; font-weight: bold; font-family: monospace;">${data.trackingNumber}</p>
+              </div>
+              ` : ''}
+              ${data.estimatedDelivery ? `
+              <div>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">প্রত্যাশিত ডেলিভারি</p>
+                <p style="margin: 4px 0 0 0; font-weight: bold;">${new Date(data.estimatedDelivery).toLocaleDateString('bn-BD')}</p>
+              </div>
+              ` : ''}
+            </div>
+            ${data.currentLocation ? `
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; color: #6b7280; font-size: 14px;">বর্তমান অবস্থান</p>
+              <p style="margin: 4px 0 0 0; font-weight: bold;">📍 ${data.currentLocation}</p>
+            </div>
+            ` : ''}
+          </div>
+
+          <!-- Tracking Button -->
+          ${data.status === 'SHIPPED' || data.status === 'DELIVERED' ? `
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${process.env.NEXTAUTH_URL}/orders/${data.orderNumber.replace('ORD-', '')}/tracking" 
+               style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              🚚 বিস্তারিত ট্র্যাক করুন
+            </a>
+          </div>
+          ` : ''}
+
+          <!-- Status-specific messages -->
+          <div style="background-color: #f0f9ff; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid ${color};">
+            ${data.status === 'CONFIRMED' ? `
+            <h3 style="margin: 0 0 16px 0; color: #1e40af; font-size: 18px;">পরবর্তী ধাপ</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #1e40af;">
+              <li>আমরা আপনার অর্ডার প্রস্তুত করা শুরু করেছি</li>
+              <li>শীঘ্রই পণ্য প্যাকেজিং করা হবে</li>
+              <li>আপডেট পেতে থাকুন</li>
+            </ul>
+            ` : data.status === 'PROCESSING' ? `
+            <h3 style="margin: 0 0 16px 0; color: #7c2d12; font-size: 18px;">প্রস্তুতি চলছে</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #7c2d12;">
+              <li>আপনার পণ্য যত্নসহকারে প্যাকেজিং করা হচ্ছে</li>
+              <li>শীঘ্রই কুরিয়ারে হস্তান্তর করা হবে</li>
+              <li>ট্র্যাকিং নম্বর শীঘ্রই পাবেন</li>
+            </ul>
+            ` : data.status === 'SHIPPED' ? `
+            <h3 style="margin: 0 0 16px 0; color: #14532d; font-size: 18px;">পাঠানো হয়েছে</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #14532d;">
+              <li>আপনার পণ্য পথে রয়েছে</li>
+              <li>ট্র্যাকিং নম্বর দিয়ে অবস্থান দেখুন</li>
+              <li>শীঘ্রই আপনার কাছে পৌঁছাবে</li>
+            </ul>
+            ` : data.status === 'DELIVERED' ? `
+            <h3 style="margin: 0 0 16px 0; color: #14532d; font-size: 18px;">ডেলিভার সম্পন্ন! 🎉</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #14532d;">
+              <li>আপনার অর্ডার সফলভাবে ডেলিভার হয়েছে</li>
+              <li>PureBite এর সাথে থাকার জন্য ধন্যবাদ</li>
+              <li>পণ্য নিয়ে কোন সমস্যা থাকলে যোগাযোগ করুন</li>
+            </ul>
+            ` : `
+            <p style="margin: 0; color: #374151;">আপনার অর্ডার আপডেট হয়েছে। যেকোনো প্রশ্নের জন্য আমাদের সাথে যোগাযোগ করুন।</p>
+            `}
+          </div>
+
+          <!-- Contact Information -->
+          <div style="text-align: center; padding: 24px; background-color: #f9fafb; border-radius: 12px;">
+            <h3 style="margin: 0 0 12px 0; color: #374151;">কোন প্রশ্ন আছে?</h3>
+            <p style="margin: 0 0 16px 0; color: #6b7280;">আমাদের কাস্টমার সার্ভিস টিম ২৪/৭ আপনার সেবায় নিয়োজিত</p>
+            <div style="display: inline-flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+              <a href="tel:+8801788888888" style="color: #16a34a; text-decoration: none; font-weight: bold;">📞 ০১৭৮৮ ৮৮৮ ৮৮৮</a>
+              <a href="mailto:${process.env.SUPPORT_EMAIL}" style="color: #16a34a; text-decoration: none; font-weight: bold;">✉️ সাপোর্ট ইমেইল</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #374151; color: white; padding: 24px; text-align: center;">
+          <p style="margin: 0 0 8px 0; font-size: 14px;">ধন্যবাদ PureBite এর সাথে থাকার জন্য!</p>
+          <p style="margin: 0; font-size: 12px; opacity: 0.8;">© ${new Date().getFullYear()} PureBite. সকল অধিকার সংরক্ষিত।</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return {
+    to: data.customerEmail,
+    subject: `${emoji} অর্ডার আপডেট: ${label} - ${data.orderNumber} | PureBite`,
     html,
   };
 }

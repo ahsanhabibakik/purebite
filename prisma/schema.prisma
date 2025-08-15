@@ -132,11 +132,13 @@ model Order {
   paymentIntentId  String?
   currency         String      @default("usd")
   trackingNumber   String?
+  carrierId        String?     @db.ObjectId
   shippingAddress  Json
   billingAddress   Json?
   isSandbox        Boolean     @default(false)
   estimatedDelivery DateTime?
   deliveredAt      DateTime?
+  shippedAt        DateTime?
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
@@ -144,6 +146,9 @@ model Order {
   user    User        @relation(fields: [userId], references: [id])
   items   OrderItem[]
   coupon  Coupon?     @relation(fields: [couponId], references: [id])
+  carrier ShippingCarrier? @relation(fields: [carrierId], references: [id])
+  tracking OrderTracking?
+  statusHistory OrderStatusHistory[]
 
   @@map("orders")
 }
@@ -503,4 +508,85 @@ enum ChatMessageType {
   IMAGE
   FILE
   SYSTEM
+}
+
+// Order tracking models
+model OrderStatusHistory {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  orderId     String      @db.ObjectId
+  status      OrderStatus
+  previousStatus OrderStatus?
+  description String?
+  location    String?     // Current location/facility
+  estimatedDelivery DateTime?
+  updatedBy   String?     @db.ObjectId  // Admin user who updated
+  isVisible   Boolean     @default(true) // Show to customer
+  createdAt   DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_status_history")
+}
+
+model ShippingCarrier {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  name        String @unique
+  code        String @unique // e.g., "FEDEX", "UPS", "SUNDARBAN"
+  trackingUrl String? // URL template with {trackingNumber} placeholder
+  apiUrl      String? // API endpoint for tracking
+  apiKey      String? // API key for carrier
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders Order[]
+  trackings OrderTracking[]
+
+  @@map("shipping_carriers")
+}
+
+model OrderTracking {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  orderId         String    @unique @db.ObjectId
+  trackingNumber  String    @unique
+  carrierId       String?   @db.ObjectId
+  currentLocation String?
+  estimatedDelivery DateTime?
+  actualDelivery  DateTime?
+  trackingEvents  Json[]    // Array of tracking events from carrier API
+  lastUpdated     DateTime  @default(now())
+  isDelivered     Boolean   @default(false)
+  deliveryProof   String?   // URL to delivery confirmation image
+  recipientName   String?
+  recipientPhone  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  order   Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrier ShippingCarrier? @relation(fields: [carrierId], references: [id])
+
+  @@map("order_tracking")
+}
+
+model DeliveryAttempt {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  orderId     String    @db.ObjectId
+  attemptDate DateTime
+  status      DeliveryAttemptStatus
+  reason      String?   // Reason for failed delivery
+  nextAttempt DateTime?
+  location    String?
+  notes       String?
+  driverName  String?
+  driverPhone String?
+  createdAt   DateTime  @default(now())
+
+  @@map("delivery_attempts")
+}
+
+enum DeliveryAttemptStatus {
+  ATTEMPTED
+  DELIVERED
+  FAILED
+  RESCHEDULED
 }

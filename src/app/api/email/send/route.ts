@@ -4,7 +4,8 @@ import {
   createOrderConfirmationEmail, 
   createAdminNotificationEmail,
   createPasswordResetEmail,
-  createNewsletterWelcomeEmail 
+  createNewsletterWelcomeEmail,
+  createOrderStatusUpdateEmail
 } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
@@ -92,6 +93,29 @@ export async function POST(request: NextRequest) {
         } else {
           return NextResponse.json(
             { error: 'Failed to send newsletter welcome email' },
+            { status: 500 }
+          );
+        }
+
+      case 'order_status_update':
+        if (!data.orderNumber || !data.customerEmail || !data.status) {
+          return NextResponse.json(
+            { error: 'Order number, customer email, and status are required' },
+            { status: 400 }
+          );
+        }
+
+        emailTemplate = createOrderStatusUpdateEmail(data);
+        const statusUpdateEmailSent = await sendEmail(emailTemplate);
+
+        if (statusUpdateEmailSent) {
+          return NextResponse.json({ 
+            success: true, 
+            message: 'Order status update email sent successfully' 
+          });
+        } else {
+          return NextResponse.json(
+            { error: 'Failed to send order status update email' },
             { status: 500 }
           );
         }
