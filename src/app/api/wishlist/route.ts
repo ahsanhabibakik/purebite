@@ -6,27 +6,21 @@ import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: { id: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const wishlist = await prisma.wishlist.findMany({
-      where: { userId: user.id },
-      include: {
-        product: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
+    const wishlist = await WishlistService.getUserWishlist(user.id);
     return NextResponse.json(wishlist);
   } catch (error) {
     console.error('Error fetching wishlist:', error);
@@ -39,48 +33,43 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: { id: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { productId } = await request.json();
+    const body = await request.json();
+    const { productId } = body;
 
-    // Check if item is already in wishlist
-    const existingItem = await prisma.wishlist.findUnique({
-      where: {
-        userId_productId: {
-          userId: user.id,
-          productId,
-        },
-      },
-    });
-
-    if (existingItem) {
+    if (!productId) {
       return NextResponse.json(
-        { error: 'Product already in wishlist' },
+        { error: 'Product ID is required' },
         { status: 400 }
       );
     }
 
-    const wishlistItem = await prisma.wishlist.create({
-      data: {
-        userId: user.id,
-        productId,
-      },
-      include: {
-        product: true,
-      },
+    // Check if product exists
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
     });
 
+    if (!product) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
+    }
+
+    const wishlistItem = await WishlistService.addToWishlist(user.id, productId);
     return NextResponse.json(wishlistItem, { status: 201 });
   } catch (error) {
     console.error('Error adding to wishlist:', error);
@@ -93,31 +82,32 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: { id: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { productId } = await request.json();
+    const { searchParams } = new URL(request.url);
+    const productId = searchParams.get('productId');
 
-    await prisma.wishlist.delete({
-      where: {
-        userId_productId: {
-          userId: user.id,
-          productId,
-        },
-      },
-    });
+    if (!productId) {
+      return NextResponse.json(
+        { error: 'Product ID is required' },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({ message: 'Removed from wishlist' });
+    await WishlistService.removeFromWishlist(user.id, productId);
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error removing from wishlist:', error);
     return NextResponse.json(
