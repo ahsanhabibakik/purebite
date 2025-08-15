@@ -22,7 +22,8 @@
       "Bash(docker run:*)",
       "Bash(pnpm run:*)",
       "Bash(git fetch:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(mv:*)"
     ],
     "deny": [],
     "ask": [],

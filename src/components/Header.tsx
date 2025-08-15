@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
+import { useTranslations } from 'next-intl';
 import { Search, ShoppingCart, Menu, Heart, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart";
@@ -9,8 +10,10 @@ import { useWishlistStore } from "@/store/wishlist";
 import { useComparisonStore } from "@/store/comparison";
 import { SearchModal } from "@/components/SearchModal";
 import { AuthButton } from "@/components/auth/AuthButton";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function Header() {
+  const t = useTranslations('navigation');
   const { toggleCart, getTotalItems } = useCartStore();
   const { getTotalItems: getWishlistItems } = useWishlistStore();
   const { getTotalItems: getComparisonItems } = useComparisonStore();
@@ -33,22 +36,22 @@ export function Header() {
         {/* Navigation - Desktop */}
         <nav className="hidden md:flex items-center gap-6">
           <Link href="/" className="text-sm font-medium hover:text-green-600 transition-colors">
-            হোম
+            {t('home')}
           </Link>
           <Link href="/shop" className="text-sm font-medium hover:text-green-600 transition-colors">
-            শপ
+            {t('shop')}
           </Link>
           <Link href="/categories" className="text-sm font-medium hover:text-green-600 transition-colors">
-            ক্যাটাগরি
+            {t('categories')}
           </Link>
           <Link href="/blog" className="text-sm font-medium hover:text-green-600 transition-colors">
             ব্লগ
           </Link>
           <Link href="/about" className="text-sm font-medium hover:text-green-600 transition-colors">
-            আমাদের সম্পর্কে
+            {t('about')}
           </Link>
           <Link href="/contact" className="text-sm font-medium hover:text-green-600 transition-colors">
-            যোগাযোগ
+            {t('contact')}
           </Link>
         </nav>
 
@@ -112,6 +115,9 @@ export function Header() {
               </span>
             )}
           </Button>
+
+          {/* Language Switcher */}
+          <LanguageSwitcher variant="button" showLabel={false} />
 
           {/* User Account */}
           <AuthButton />
