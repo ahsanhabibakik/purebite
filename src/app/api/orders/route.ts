@@ -136,6 +136,45 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Send email notifications
+    try {
+      // Prepare email data
+      const emailData = {
+        orderNumber: order.orderNumber,
+        customerName: user.name || 'Customer',
+        customerEmail: user.email,
+        total: order.total,
+        items: order.items.map(item => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.price,
+          image: item.product.image,
+        })),
+        shippingAddress: JSON.parse(order.shippingAddress),
+        paymentMethod: order.paymentMethod,
+        orderDate: order.createdAt.toISOString(),
+        estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+      };
+
+      // Send email notifications (don't wait for them to complete)
+      fetch(`${process.env.NEXTAUTH_URL}/api/email/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'order_confirmation',
+          data: emailData,
+        }),
+      }).catch(error => {
+        console.error('Failed to send order confirmation email:', error);
+      });
+
+    } catch (emailError) {
+      console.error('Email notification error:', emailError);
+      // Don't fail the order creation if email fails
+    }
+
     return NextResponse.json(order, { status: 201 });
   } catch (error) {
     console.error('Error creating order:', error);

@@ -27,15 +27,28 @@ export function Newsletter() {
 
     setStatus("loading");
     
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setStatus("success");
-      setMessage("সফলভাবে সাবস্ক্রাইব হয়েছে!");
-      setEmail("");
-    } catch {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus("success");
+        setMessage(data.message || "সফলভাবে সাবস্ক্রাইব হয়েছে!");
+        setEmail("");
+      } else {
+        setStatus("error");
+        setMessage(data.error || "সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      }
+    } catch (error) {
       setStatus("error");
-      setMessage("সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      setMessage("নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।");
     }
   };
 
