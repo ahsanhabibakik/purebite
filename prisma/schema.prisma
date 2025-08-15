@@ -256,19 +256,30 @@ model CartItem {
 }
 
 model Coupon {
-  id             String     @id @default(auto()) @map("_id") @db.ObjectId
-  code           String     @unique
-  description    String?
-  type           CouponType
-  value          Float
-  minOrderValue  Float?
-  maxUses        Int?
-  usedCount      Int        @default(0)
-  isActive       Boolean    @default(true)
-  validFrom      DateTime
-  validUntil     DateTime
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  code              String         @unique
+  name              String         // Display name for admin
+  description       String?
+  type              CouponType
+  value             Float          // Percentage or fixed amount
+  minOrderValue     Float?         // Minimum order amount required
+  maxDiscountAmount Float?         // Maximum discount cap for percentage coupons
+  maxUses           Int?           // Total usage limit
+  maxUsesPerUser    Int?           // Per-user usage limit
+  usedCount         Int            @default(0)
+  isActive          Boolean        @default(true)
+  isPublic          Boolean        @default(false) // Public coupons visible to all
+  autoApply         Boolean        @default(false) // Auto-apply if conditions met
+  stackable         Boolean        @default(false) // Can be combined with other coupons
+  validFrom         DateTime
+  validUntil        DateTime
+  applicableProducts String[]      @db.ObjectId // Specific products
+  excludedProducts   String[]      @db.ObjectId // Excluded products
+  applicableCategories String[]    // Product categories
+  firstTimeOnly     Boolean        @default(false) // Only for first-time customers
+  createdBy         String?        @db.ObjectId   // Admin who created
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   orders     Order[]
   userCoupons UserCoupon[]
@@ -277,10 +288,12 @@ model Coupon {
 }
 
 model UserCoupon {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
-  userId   String @db.ObjectId
-  couponId String @db.ObjectId
-  usedAt   DateTime?
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  couponId  String   @db.ObjectId
+  usedCount Int      @default(0) // Track how many times user used this coupon
+  lastUsedAt DateTime?
+  createdAt DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id])
   coupon Coupon @relation(fields: [couponId], references: [id])
