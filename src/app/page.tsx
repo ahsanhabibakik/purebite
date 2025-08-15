@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { Newsletter } from "@/components/Newsletter";
 import { Testimonials } from "@/components/Testimonials";
+import { PersonalizedRecommendations, TrendingRecommendations, NewArrivalsRecommendations, PriceDropRecommendations } from "@/components/recommendations/RecommendationSection";
 import { products, categories } from "@/data/products";
 
 export default function Home() {
@@ -212,8 +213,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-16 bg-gray-50">
+      {/* Personalized Recommendations */}
+      <PersonalizedRecommendations 
+        className="bg-white"
+        limit={8}
+      />
+
+      {/* Trending Products */}
+      <TrendingRecommendations 
+        className="bg-gray-50"
+        limit={8}
+      />
+
+      {/* Featured Products - Fallback */}
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -282,13 +295,25 @@ export default function Home() {
         </div>
       </section>
 
-      {/* New Products */}
+      {/* New Arrivals Recommendations */}
+      <NewArrivalsRecommendations 
+        className="bg-gray-50"
+        limit={8}
+      />
+
+      {/* Price Drop Recommendations */}
+      <PriceDropRecommendations 
+        className="bg-white"
+        limit={8}
+      />
+
+      {/* New Products - Fallback */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">নতুন পণ্যসমূহ</h2>
-              <p className="text-gray-600">সবার আগে দেখুন আমাদের নতুন সংযোজন</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">সাম্প্রতিক সংযোজন</h2>
+              <p className="text-gray-600">সবার আগে দেখুন আমাদের নতুন পণ্য</p>
             </div>
             <Button variant="outline" asChild>
               <Link href="/shop?sort=newest">

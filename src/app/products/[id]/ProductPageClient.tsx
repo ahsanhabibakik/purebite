@@ -20,6 +20,8 @@ import { ProductCard } from "@/components/ProductCard";
 import ReviewSection from "@/components/reviews/ReviewSection";
 import { useCartStore } from "@/store/cart";
 import { useReviewsStore } from "@/store/reviews";
+import { useRecommendationTracking } from "@/hooks/useRecommendationTracking";
+import { SimilarProductsRecommendations, AlsoViewedRecommendations, AlsoBoughtRecommendations } from "@/components/recommendations/RecommendationSection";
 import { Product } from "@/types/product";
 
 interface ProductPageClientProps {
@@ -34,11 +36,36 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
 
   const { addItem, openCart } = useCartStore();
   const { getReviewStats } = useReviewsStore();
+  const { trackAddToCart, trackWishlistAdd, trackShare, usePageViewTracking, useScrollTracking } = useRecommendationTracking();
 
   const handleAddToCart = () => {
     addItem(product, quantity);
     openCart();
+    trackAddToCart(product.id, { quantity, source: 'product_page' });
   };
+
+  const handleWishlistAdd = () => {
+    // Add wishlist functionality here
+    trackWishlistAdd(product.id, { source: 'product_page' });
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: product.name,
+        text: product.description,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert('পণ্যের লিঙ্ক কপি করা হয়েছে!');
+    }
+    trackShare(product.id, { method: 'link', source: 'product_page' });
+  };
+
+  // Track page view and scroll behavior
+  usePageViewTracking(product.id);
+  useScrollTracking(product.id);
 
   const discountPercentage = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -213,10 +240,20 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
               <ShoppingCart className="mr-2 h-5 w-5" />
               {product.inStock ? `৳${product.price * quantity} - কার্টে যোগ করুন` : "স্টকে নেই"}
             </Button>
-            <Button variant="outline" size="lg" className="aspect-square p-0">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="aspect-square p-0"
+              onClick={handleWishlistAdd}
+            >
               <Heart className="h-5 w-5" />
             </Button>
-            <Button variant="outline" size="lg" className="aspect-square p-0">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="aspect-square p-0"
+              onClick={handleShare}
+            >
               <Share2 className="h-5 w-5" />
             </Button>
           </div>
@@ -344,10 +381,34 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
         </div>
       </div>
 
-      {/* Related Products */}
+      {/* Recommendation Sections */}
+      <div className="space-y-8">
+        {/* Similar Products */}
+        <SimilarProductsRecommendations 
+          productId={product.id} 
+          excludeProductIds={[product.id]}
+          limit={8}
+        />
+
+        {/* Also Viewed */}
+        <AlsoViewedRecommendations 
+          productId={product.id} 
+          excludeProductIds={[product.id]}
+          limit={8}
+        />
+
+        {/* Also Bought */}
+        <AlsoBoughtRecommendations 
+          productId={product.id} 
+          excludeProductIds={[product.id]}
+          limit={8}
+        />
+      </div>
+
+      {/* Fallback: Related Products from category */}
       {relatedProducts.length > 0 && (
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">সংশ্লিষ্ট পণ্যসমূহ</h2>
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">একই ক্যাটাগরির পণ্যসমূহ</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map((relatedProduct) => (
               <ProductCard key={relatedProduct.id} product={relatedProduct} />
