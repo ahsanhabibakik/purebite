@@ -8,6 +8,8 @@ import ChatWidget from "@/components/chat/ChatWidget";
 import { AuthProvider } from "@/components/AuthProvider";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import GoogleTagManager, { GoogleTagManagerNoScript } from "@/components/GoogleTagManager";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import PerformanceMonitor from "@/components/PerformanceMonitor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,8 +22,44 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PureBite",
-  description: "Your one-stop shop for pure and healthy products.",
+  title: "PureBite - Organic Food Store",
+  description: "Premium organic food store with home delivery across Bangladesh. Fresh, healthy, and pure products at your doorstep.",
+  manifest: "/manifest.json",
+  themeColor: "#22c55e",
+  viewport: "width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, viewport-fit=cover",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "PureBite",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "PureBite",
+    title: "PureBite - Organic Food Store",
+    description: "Premium organic food store with home delivery across Bangladesh",
+  },
+  twitter: {
+    card: "summary",
+    title: "PureBite - Organic Food Store",
+    description: "Premium organic food store with home delivery across Bangladesh",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icons/icon-72x72.png", sizes: "72x72", type: "image/png" },
+      { url: "/icons/icon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/icons/icon-128x128.png", sizes: "128x128", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -32,10 +70,41 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* PWA manifest and theme color */}
+        <meta name="theme-color" content="#22c55e" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="PureBite" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#22c55e" />
+        
+        {/* Apple touch icons */}
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
+        
         {/* Google Tag Manager - positioned as high in head as possible */}
         <GoogleTagManager />
         {/* Google Analytics 4 - immediately after GTM */}
         <GoogleAnalytics />
+        
+        {/* Service Worker Registration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                      console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                      console.log('SW registration failed: ', registrationError);
+                    });
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen overflow-x-hidden`}
@@ -48,6 +117,8 @@ export default function RootLayout({
           <Footer />
           <CartSidebar />
           <ChatWidget />
+          <PWAInstallPrompt />
+          <PerformanceMonitor />
         </AuthProvider>
       </body>
     </html>
