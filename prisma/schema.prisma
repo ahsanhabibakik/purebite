@@ -109,6 +109,7 @@ model Product {
   // Relations
   orderItems      OrderItem[]
   reviews         Review[]
+  reviewSummary   ReviewSummary?
   wishlist        Wishlist[]
   cartItems       CartItem[]
   stockMovements  StockMovement[]
@@ -172,17 +173,75 @@ model Review {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String   @db.ObjectId
   productId String   @db.ObjectId
-  rating    Int
+  orderId   String?  @db.ObjectId // Link to order for verified purchases
+  rating    Int      // 1-5 stars
   title     String?
   comment   String
+  pros      String[] // Positive aspects
+  cons      String[] // Negative aspects
+  isVerifiedPurchase Boolean @default(false)
+  isHelpful Int      @default(0) // Helpful votes
+  isReported Boolean @default(false)
+  moderatorNotes String?
+  images    String[] // Review images
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
   user    User    @relation(fields: [userId], references: [id])
   product Product @relation(fields: [productId], references: [id])
+  helpful ReviewHelpful[]
+  reports ReviewReport[]
 
+  @@unique([userId, productId]) // One review per user per product
   @@map("reviews")
+}
+
+model ReviewHelpful {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  reviewId String @db.ObjectId
+  userId   String @db.ObjectId
+  isHelpful Boolean // true for helpful, false for not helpful
+  createdAt DateTime @default(now())
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+  @@map("review_helpful")
+}
+
+model ReviewReport {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  reviewId String @db.ObjectId
+  userId   String @db.ObjectId
+  reason   ReviewReportReason
+  comment  String?
+  status   ReviewReportStatus @default(PENDING)
+  resolvedAt DateTime?
+  resolvedBy String? @db.ObjectId
+  createdAt DateTime @default(now())
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+  @@map("review_reports")
+}
+
+model ReviewSummary {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String @unique @db.ObjectId
+  totalReviews Int   @default(0)
+  averageRating Float @default(0)
+  rating1Count Int   @default(0)
+  rating2Count Int   @default(0)
+  rating3Count Int   @default(0)
+  rating4Count Int   @default(0)
+  rating5Count Int   @default(0)
+  lastUpdated DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("review_summaries")
 }
 
 model Wishlist {
@@ -623,4 +682,129 @@ enum DeliveryAttemptStatus {
   DELIVERED
   FAILED
   RESCHEDULED
+}
+
+enum ReviewReportReason {
+  SPAM
+  INAPPROPRIATE
+  FAKE
+  OFFENSIVE
+  OTHER
+}
+
+enum ReviewReportStatus {
+  PENDING
+  REVIEWED
+  APPROVED
+  REJECTED
+}
+
+// Recommendation engine models
+model UserBehavior {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  productId   String   @db.ObjectId
+  actionType  UserActionType
+  sessionId   String?  // Track user sessions
+  deviceType  String?  // mobile, desktop, tablet
+  source      String?  // organic, search, social, etc.
+  duration    Int?     // Time spent on product page (seconds)
+  metadata    Json?    // Additional action-specific data
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([productId, actionType])
+  @@map("user_behaviors")
+}
+
+model ProductSimilarity {
+  id            String  @id @default(auto()) @map("_id") @db.ObjectId
+  productId     String  @db.ObjectId
+  similarProductId String @db.ObjectId
+  similarityScore Float  // 0-1 similarity score
+  similarityType SimilarityType
+  lastUpdated   DateTime @default(now())
+
+  @@unique([productId, similarProductId])
+  @@index([productId, similarityScore])
+  @@map("product_similarities")
+}
+
+model Recommendation {
+  id          String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String            @db.ObjectId
+  productId   String            @db.ObjectId
+  type        RecommendationType
+  score       Float             // Recommendation confidence score
+  reason      String?           // Why this was recommended
+  context     Json?             // Context data (current product, cart items, etc.)
+  isShown     Boolean           @default(false)
+  isClicked   Boolean           @default(false)
+  isPurchased Boolean           @default(false)
+  shownAt     DateTime?
+  clickedAt   DateTime?
+  purchasedAt DateTime?
+  expiresAt   DateTime?         // When recommendation expires
+  createdAt   DateTime          @default(now())
+
+  @@index([userId, type, createdAt])
+  @@index([productId, score])
+  @@map("recommendations")
+}
+
+model UserPreferences {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String   @unique @db.ObjectId
+  preferredCategories String[] // Product categories user likes
+  preferredPriceRange Json?  // {min: number, max: number}
+  preferredBrands  String[] // Brand preferences
+  dietaryRestrictions String[] // vegan, organic, gluten-free, etc.
+  shoppingStyle    ShoppingStyle @default(BALANCED)
+  lastUpdated      DateTime @default(now())
+
+  @@map("user_preferences")
+}
+
+enum UserActionType {
+  VIEW          // Product page view
+  ADD_TO_CART   // Added to cart
+  REMOVE_FROM_CART // Removed from cart
+  PURCHASE      // Completed purchase
+  WISHLIST_ADD  // Added to wishlist
+  WISHLIST_REMOVE // Removed from wishlist
+  SEARCH        // Searched for product
+  SHARE         // Shared product
+  REVIEW        // Left a review
+  COMPARE       // Product comparison
+}
+
+enum SimilarityType {
+  CONTENT_BASED    // Based on product attributes
+  COLLABORATIVE    // Based on user behavior
+  HYBRID          // Combination of both
+  CATEGORY        // Same category products
+  PRICE_RANGE     // Similar price range
+  BRAND           // Same brand
+}
+
+enum RecommendationType {
+  ALSO_VIEWED       // People who viewed this also viewed
+  ALSO_BOUGHT       // People who bought this also bought
+  SIMILAR_PRODUCTS  // Similar to current product
+  PERSONALIZED      // Based on user history
+  TRENDING          // Currently popular
+  NEW_ARRIVALS      // Recently added products
+  PRICE_DROP        // Products with price reductions
+  BACK_IN_STOCK     // Previously out of stock items
+  SEASONAL          // Seasonal recommendations
+  CART_ABANDONMENT  // Recover abandoned cart items
+}
+
+enum ShoppingStyle {
+  PRICE_CONSCIOUS   // Prefers cheaper options
+  QUALITY_FOCUSED   // Prefers higher quality/premium
+  BRAND_LOYAL       // Sticks to preferred brands
+  EXPLORER          // Likes to try new products
+  BULK_BUYER        // Prefers bulk purchases
+  BALANCED          // Mix of all factors
 }
