@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
@@ -25,8 +25,6 @@ export const metadata: Metadata = {
   title: "PureBite - Organic Food Store",
   description: "Premium organic food store with home delivery across Bangladesh. Fresh, healthy, and pure products at your doorstep.",
   manifest: "/manifest.json",
-  themeColor: "#22c55e",
-  viewport: "width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, viewport-fit=cover",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -60,6 +58,15 @@ export const metadata: Metadata = {
       { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
     ],
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  shrinkToFit: 'no',
+  userScalable: 'no',
+  viewportFit: 'cover',
+  themeColor: '#22c55e',
 };
 
 export default function RootLayout({

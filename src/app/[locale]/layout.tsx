@@ -53,7 +53,7 @@ export async function generateMetadata({
       address: false,
       telephone: false,
     },
-    metadataBase: new URL('https://purebite.com'),
+    metadataBase: new URL('https://purebite.vercel.app'),
     alternates: {
       canonical: '/',
       languages: {
@@ -68,7 +68,7 @@ export async function generateMetadata({
         : "Homemade, organic & nutritious food collection. Best quality products for your family's health.",
       type: 'website',
       locale: locale === 'bn' ? 'bn_BD' : 'en_US',
-      url: 'https://purebite.com',
+      url: 'https://purebite.vercel.app',
       siteName: 'PureBite',
     },
     twitter: {
