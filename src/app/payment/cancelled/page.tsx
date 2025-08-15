@@ -1,19 +1,10 @@
-"use client";
-
-import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, ShoppingCart, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-function PaymentCancelledContent() {
-  const searchParams = useSearchParams();
-  const [transactionId, setTransactionId] = useState<string>("");
+export const dynamic = 'force-dynamic';
 
-  useEffect(() => {
-    setTransactionId(searchParams.get('tran_id') || "");
-  }, [searchParams]);
-
+export default function PaymentCancelledPage() {
   return (
     <div className="container mx-auto px-4 py-8 min-h-[80vh] flex items-center justify-center">
       <div className="max-w-md mx-auto text-center">
@@ -30,22 +21,6 @@ function PaymentCancelledContent() {
         <p className="text-gray-600 mb-6">
           আপনি পেমেন্ট প্রক্রিয়া বাতিল করেছেন। আপনার কার্টের পণ্যগুলো এখনও সংরক্ষিত আছে।
         </p>
-
-        {/* Transaction Info */}
-        {transactionId && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
-            <div className="text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">লেনদেন আইডি:</span>
-                <span className="font-mono font-medium">{transactionId}</span>
-              </div>
-              <div className="flex justify-between mt-2">
-                <span className="text-gray-600">স্ট্যাটাস:</span>
-                <span className="text-orange-600 font-medium">বাতিল</span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Reassurance */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -108,17 +83,5 @@ function PaymentCancelledContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function PaymentCancelledPage() {
-  return (
-    <Suspense fallback={
-      <div className="container mx-auto px-4 py-8 min-h-[80vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
-      </div>
-    }>
-      <PaymentCancelledContent />
-    </Suspense>
   );
 }

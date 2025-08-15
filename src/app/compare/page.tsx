@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useComparisonStore } from "@/store/comparison";
 import { useCartStore } from "@/store/cart";
 import { Button } from "@/components/ui/button";

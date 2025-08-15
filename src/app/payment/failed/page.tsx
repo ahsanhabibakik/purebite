@@ -1,38 +1,10 @@
-"use client";
+export const dynamic = 'force-dynamic';
 
-import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { XCircle, ArrowRight, RefreshCcw, Phone, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-function PaymentFailedContent() {
-  const searchParams = useSearchParams();
-  const [transactionId, setTransactionId] = useState<string>("");
-  const [reason, setReason] = useState<string>("");
-
-  useEffect(() => {
-    setTransactionId(searchParams.get('tran_id') || "");
-    setReason(searchParams.get('reason') || "পেমেন্ট ব্যর্থ হয়েছে");
-  }, [searchParams]);
-
-  const getFailureMessage = (reason: string) => {
-    switch (reason.toLowerCase()) {
-      case 'insufficient_funds':
-        return "অপর্যাপ্ত ব্যালেন্স। আপনার একাউন্টে পর্যাপ্ত টাকা নেই।";
-      case 'card_declined':
-        return "কার্ড প্রত্যাখ্যাত। আপনার কার্ড ব্লক বা মেয়াদ শেষ হয়ে গেছে।";
-      case 'network_error':
-        return "নেটওয়ার্ক সমস্যা। ইন্টারনেট সংযোগ চেক করুন।";
-      case 'verification_failed':
-        return "পরিচয় যাচাইকরণ ব্যর্থ। আবার চেষ্টা করুন।";
-      case 'processing_error':
-        return "প্রক্রিয়াকরণ সমস্যা। কিছুক্ষণ পর আবার চেষ্টা করুন।";
-      default:
-        return reason || "পেমেন্ট সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।";
-    }
-  };
-
+export default function PaymentFailedPage() {
   return (
     <div className="container mx-auto px-4 py-8 min-h-[80vh] flex items-center justify-center">
       <div className="max-w-md mx-auto text-center">
@@ -44,7 +16,7 @@ function PaymentFailedContent() {
 
         {/* Failed Message */}
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          পেমেন্ট ব্যর্থ হয়েছে! 😞
+          পেমেন্ট ব্যর্থ হয়েছে!
         </h1>
         <p className="text-gray-600 mb-6">
           দুঃখিত, আপনার পেমেন্টটি সম্পন্ন করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।
@@ -57,19 +29,10 @@ function PaymentFailedContent() {
             <div className="text-left">
               <h3 className="font-semibold text-red-900 mb-2">সমস্যার কারণ:</h3>
               <p className="text-sm text-red-800">
-                {getFailureMessage(reason)}
+                পেমেন্ট সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।
               </p>
             </div>
           </div>
-          
-          {transactionId && (
-            <div className="mt-4 pt-4 border-t border-red-200">
-              <div className="flex justify-between text-sm">
-                <span className="text-red-700">লেনদেন আইডি:</span>
-                <span className="font-mono font-medium">{transactionId}</span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Solutions */}
@@ -131,17 +94,5 @@ function PaymentFailedContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function PaymentFailedPage() {
-  return (
-    <Suspense fallback={
-      <div className="container mx-auto px-4 py-8 min-h-[80vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-      </div>
-    }>
-      <PaymentFailedContent />
-    </Suspense>
   );
 }

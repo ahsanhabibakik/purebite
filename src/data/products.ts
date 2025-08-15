@@ -29,8 +29,8 @@ export const products: Product[] = [
     ingredients: ["খেজুর", "আমন্ড", "কাজু", "দেশি ঘি", "এলাচ"],
     origin: "ঢাকা",
     expiryDate: "৭ দিন",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15')
   },
   {
     id: "2", 
@@ -56,8 +56,8 @@ export const products: Product[] = [
     ingredients: ["তিল", "খেজুর গুড়", "নারিকেল কুঁচি", "এলাচ"],
     origin: "যশোর",
     expiryDate: "১৫ দিন",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15')
   },
   {
     id: "3",
@@ -83,8 +83,8 @@ export const products: Product[] = [
     ingredients: ["খেজুর", "আমন্ড", "আখরোট", "কিশমিশ", "নারিকেল", "চিয়া সিড"],
     origin: "ঢাকা",
     expiryDate: "১০ দিন",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15')
   },
 
   // Dry Foods
@@ -111,8 +111,8 @@ export const products: Product[] = [
     },
     origin: "ভিয়েতনাম",
     expiryDate: "৬ মাস",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15')
   },
   {
     id: "5",
@@ -137,8 +137,8 @@ export const products: Product[] = [
     },
     origin: "যশোর",
     expiryDate: "১ বছর",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15')
   },
 
   // Fresh Products  
@@ -158,8 +158,8 @@ export const products: Product[] = [
     featured: true,
     origin: "পদ্মা নদী",
     expiryDate: "১ দিন",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15')
   },
   {
     id: "7",
@@ -177,8 +177,8 @@ export const products: Product[] = [
     featured: false,
     origin: "গাজীপুর",
     expiryDate: "৫ দিন",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15')
   },
 
   // Gift Combos
@@ -201,8 +201,8 @@ export const products: Product[] = [
     ingredients: ["খেজুর হালুয়া", "বাদাম মিক্স", "এনার্জি বল", "তিলের লাড্ডু"],
     origin: "ঢাকা",
     expiryDate: "৭ দিন",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15')
   }
 ];
 
