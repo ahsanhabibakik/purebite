@@ -1,3 +1,7 @@
+"use client";
+
+export const dynamic = 'force-dynamic';
+
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Truck, Shield, Award, Phone } from "lucide-react";
