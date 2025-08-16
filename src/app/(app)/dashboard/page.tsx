@@ -24,10 +24,15 @@ import {
   TrendingUp,
   Award,
   Settings,
-  Plus
+  Plus,
+  Scale,
+  ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ProductCard } from "@/components/ProductCard";
+import { useWishlistStore } from "@/store/wishlist";
+import { useComparisonStore } from "@/store/comparison";
 
 interface Order {
   id: string;
@@ -56,6 +61,8 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { items: wishlistItems, getTotalItems: getTotalWishlistItems } = useWishlistStore();
+  const { items: comparisonItems, getTotalItems: getTotalComparisonItems } = useComparisonStore();
 
   // Mock data - Replace with actual API calls
   useEffect(() => {
@@ -126,6 +133,8 @@ export default function UserDashboard() {
     completedOrders: orders.filter(o => o.status === "delivered").length,
     pendingOrders: orders.filter(o => o.status === "pending" || o.status === "processing").length,
     totalSpent: orders.reduce((sum, order) => sum + order.total, 0),
+    wishlistItems: getTotalWishlistItems(),
+    comparisonItems: getTotalComparisonItems(),
   };
 
   const getStatusColor = (status: Order["status"]) => {
@@ -231,6 +240,42 @@ export default function UserDashboard() {
         </div>
       </div>
 
+      {/* Wishlist & Compare Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Heart className="h-8 w-8 text-red-600" />
+              <div className="ml-3">
+                <p className="text-sm font-medium text-red-900">উইশলিস্ট</p>
+                <p className="text-2xl font-bold text-red-600">{stats.wishlistItems}</p>
+              </div>
+            </div>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/wishlist">
+                দেখুন <ArrowRight className="h-4 w-4 ml-1" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Scale className="h-8 w-8 text-blue-600" />
+              <div className="ml-3">
+                <p className="text-sm font-medium text-blue-900">তুলনা</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.comparisonItems}</p>
+              </div>
+            </div>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/compare">
+                দেখুন <ArrowRight className="h-4 w-4 ml-1" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Navigation Tabs */}
       <div className="bg-white rounded-lg border border-gray-200 mb-6">
         <div className="border-b border-gray-200">
@@ -238,6 +283,8 @@ export default function UserDashboard() {
             {[
               { id: "overview", label: "ওভারভিউ", icon: TrendingUp },
               { id: "orders", label: "অর্ডার", icon: Package },
+              { id: "wishlist", label: "উইশলিস্ট", icon: Heart },
+              { id: "comparison", label: "তুলনা", icon: Scale },
               { id: "profile", label: "প্রোফাইল", icon: User },
               { id: "addresses", label: "ঠিকানা", icon: MapPin },
             ].map((tab) => {
@@ -304,6 +351,85 @@ export default function UserDashboard() {
                 </div>
               </div>
 
+              {/* Wishlist & Comparison Preview */}
+              {(stats.wishlistItems > 0 || stats.comparisonItems > 0) && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Recent Wishlist Items */}
+                  {stats.wishlistItems > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                          <Heart className="h-5 w-5 text-red-600" />
+                          সাম্প্রতিক উইশলিস্ট ({stats.wishlistItems})
+                        </h3>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab("wishlist")}>
+                          সব দেখুন
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {wishlistItems.slice(0, 4).map((product) => (
+                          <div key={product.id} className="border border-gray-200 rounded-lg p-3">
+                            <div className="aspect-square relative mb-2 overflow-hidden rounded">
+                              <Image
+                                src={product.images[0]}
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                                sizes="150px"
+                              />
+                            </div>
+                            <h4 className="font-medium text-sm text-gray-900 line-clamp-2 mb-1">
+                              {product.name}
+                            </h4>
+                            <p className="text-sm font-semibold text-green-600">৳{product.price}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recent Comparison Items */}
+                  {stats.comparisonItems > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                          <Scale className="h-5 w-5 text-blue-600" />
+                          তুলনার পণ্য ({stats.comparisonItems})
+                        </h3>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab("comparison")}>
+                          তুলনা করুন
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {comparisonItems.slice(0, 4).map((product) => (
+                          <div key={product.id} className="border border-gray-200 rounded-lg p-3">
+                            <div className="aspect-square relative mb-2 overflow-hidden rounded">
+                              <Image
+                                src={product.images[0]}
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                                sizes="150px"
+                              />
+                              <div className="absolute top-1 left-1">
+                                <Badge variant="secondary" className="text-xs px-1 py-0">
+                                  <Scale className="h-2 w-2 mr-1" />
+                                  তুলনা
+                                </Badge>
+                              </div>
+                            </div>
+                            <h4 className="font-medium text-sm text-gray-900 line-clamp-2 mb-1">
+                              {product.name}
+                            </h4>
+                            <p className="text-sm font-semibold text-green-600">৳{product.price}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Quick Actions */}
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">দ্রুত অ্যাকশন</h3>
@@ -317,12 +443,14 @@ export default function UserDashboard() {
                   <Button variant="outline" className="h-16 flex-col gap-2" asChild>
                     <Link href="/wishlist">
                       <Heart className="h-6 w-6" />
-                      উইশলিস্ট
+                      উইশলিস্ট ({stats.wishlistItems})
                     </Link>
                   </Button>
-                  <Button variant="outline" className="h-16 flex-col gap-2">
-                    <Settings className="h-6 w-6" />
-                    সেটিংস
+                  <Button variant="outline" className="h-16 flex-col gap-2" asChild>
+                    <Link href="/compare">
+                      <Scale className="h-6 w-6" />
+                      তুলনা ({stats.comparisonItems})
+                    </Link>
                   </Button>
                   <Button variant="outline" className="h-16 flex-col gap-2">
                     <Award className="h-6 w-6" />
@@ -467,6 +595,90 @@ export default function UserDashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Wishlist Tab */}
+          {activeTab === "wishlist" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">আমার উইশলিস্ট</h2>
+                  <p className="text-gray-600">{stats.wishlistItems}টি পণ্য</p>
+                </div>
+                <Button asChild>
+                  <Link href="/wishlist">
+                    সম্পূর্ণ উইশলিস্ট দেখুন
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+              </div>
+
+              {stats.wishlistItems === 0 ? (
+                <div className="text-center py-12">
+                  <Heart className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">আপনার উইশলিস্ট খালি</h3>
+                  <p className="text-gray-600 mb-6">
+                    আপনার পছন্দের পণ্যগুলো উইশলিস্টে যোগ করুন যাতে পরে সহজেই খুঁজে পান।
+                  </p>
+                  <Button asChild>
+                    <Link href="/shop">শপিং শুরু করুন</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {wishlistItems.slice(0, 6).map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Comparison Tab */}
+          {activeTab === "comparison" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">পণ্য তুলনা</h2>
+                  <p className="text-gray-600">
+                    {stats.comparisonItems}টি পণ্য তুলনার জন্য ({3 - stats.comparisonItems}টি আরও যোগ করতে পারেন)
+                  </p>
+                </div>
+                <Button asChild>
+                  <Link href="/compare">
+                    সম্পূর্ণ তুলনা দেখুন
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+              </div>
+
+              {stats.comparisonItems === 0 ? (
+                <div className="text-center py-12">
+                  <Scale className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">কোন পণ্য তুলনার জন্য নেই</h3>
+                  <p className="text-gray-600 mb-6">
+                    পণ্যের তুলনা করতে প্রোডাক্ট কার্ডে "তুলনা করুন" বাটনে ক্লিক করুন (সর্বোচ্চ ৩টি)
+                  </p>
+                  <Button asChild>
+                    <Link href="/shop">শপিং শুরু করুন</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {comparisonItems.map((product) => (
+                    <div key={product.id} className="relative">
+                      <ProductCard product={product} />
+                      <div className="absolute top-2 left-2">
+                        <Badge className="bg-blue-100 text-blue-800">
+                          <Scale className="h-3 w-3 mr-1" />
+                          তুলনায়
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
