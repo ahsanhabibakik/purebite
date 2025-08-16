@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart";
 import { useSession } from "next-auth/react";
+import { useTranslations } from 'next-intl';
 
 const checkoutSchema = z.object({
   fullName: z.string().min(2, "নাম কমপক্ষে ২ অক্ষরের হতে হবে"),
@@ -48,6 +49,7 @@ interface CouponValidationResult {
 }
 
 export default function CheckoutPage() {
+  const t = useTranslations('checkout');
   const { data: session } = useSession();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -192,11 +194,21 @@ export default function CheckoutPage() {
           orderDate: new Date()
         };
 
-        // TODO: Send to your order creation API
-        console.log("Cash on Delivery Order:", orderData);
-        
-        clearCart();
-        setOrderPlaced(true);
+        // Create order via API
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        });
+
+        if (response.ok) {
+          clearCart();
+          setOrderPlaced(true);
+        } else {
+          throw new Error('Failed to create order');
+        }
       } else {
         // Handle online payment via SSLCommerz
         const response = await fetch('/api/payment/sslcommerz', {
