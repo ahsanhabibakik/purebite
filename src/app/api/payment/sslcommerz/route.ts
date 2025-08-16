@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
+import { prisma } from '@/lib/db';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 interface SSLCommerzPaymentRequest {
   items: Array<{
     productId: string;
-    product: {
+    product?: {
       id: string;
       name: string;
       price: number;
-      images: string[];
+      images?: string[];
     };
     quantity: number;
+    price: number;
   }>;
   customerInfo: {
     fullName: string;
@@ -21,14 +25,32 @@ interface SSLCommerzPaymentRequest {
     city: string;
     district: string;
     postalCode?: string;
+    specialInstructions?: string;
   };
   totalAmount: number;
+  subtotal: number;
+  deliveryFee: number;
+  discount?: number;
+  couponId?: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: SSLCommerzPaymentRequest = await request.json();
-    const { items, customerInfo, totalAmount } = body;
+    const { items, customerInfo, totalAmount, subtotal, deliveryFee, discount, couponId } = body;
+
+    // Validate required fields
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: 'কার্টে কোন পণ্য নেই' }, { status: 400 });
+    }
+
+    if (!customerInfo || !customerInfo.fullName || !customerInfo.phone) {
+      return NextResponse.json({ error: 'গ্রাহকের তথ্য সম্পূর্ণ নয়' }, { status: 400 });
+    }
+
+    if (!totalAmount || totalAmount <= 0) {
+      return NextResponse.json({ error: 'অবৈধ পেমেন্ট পরিমাণ' }, { status: 400 });
+    }
 
     // Generate unique transaction ID
     const transactionId = `PB-${Date.now()}-${uuidv4().substring(0, 8)}`;
@@ -112,9 +134,47 @@ export async function POST(request: NextRequest) {
     const result = await sslcommerzResponse.json();
 
     if (result.status === 'SUCCESS') {
-      // Store order in database before redirecting
-      // TODO: Create order record in your database
-      console.log('Order created for transaction:', transactionId);
+      // Get session for user authentication
+      const session = await getServerSession(authOptions);
+      let user = null;
+      if (session?.user?.email) {
+        user = await prisma.user.findUnique({
+          where: { email: session.user.email },
+        });
+      }
+
+      // Create order in database before redirecting to payment
+      const order = await prisma.order.create({
+        data: {
+          userId: user?.id,
+          orderNumber: transactionId,
+          total: totalAmount,
+          subtotal: subtotal,
+          tax: 0,
+          shipping: deliveryFee,
+          status: 'PENDING_PAYMENT',
+          paymentMethod: 'SSLCOMMERZ',
+          shippingAddress: JSON.stringify(customerInfo),
+          currency: 'BDT',
+          customerEmail: customerInfo.email,
+          customerPhone: customerInfo.phone,
+          customerName: customerInfo.fullName,
+          transactionId: transactionId,
+          items: {
+            create: items.map((item: any) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              price: item.price,
+              productName: item.product?.name || `Product ${item.productId}`,
+            })),
+          },
+        },
+        include: {
+          items: true,
+        },
+      });
+
+      console.log('Order created for transaction:', transactionId, 'Order ID:', order.id);
       
       return NextResponse.json({
         status: 'success',
@@ -122,6 +182,7 @@ export async function POST(request: NextRequest) {
           sessionkey: result.sessionkey,
           GatewayPageURL: result.GatewayPageURL,
           transactionId,
+          orderId: order.id,
         }
       });
     } else {

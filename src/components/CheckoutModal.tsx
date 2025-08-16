@@ -59,6 +59,7 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const form = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
@@ -159,6 +160,7 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
 
   const onSubmit = async (data: CheckoutForm) => {
     setIsSubmitting(true);
+    setSubmitError(null);
     
     try {
       if (data.paymentMethod === 'cash_on_delivery' || data.paymentMethod === 'mobile_banking' || data.paymentMethod === 'bank_transfer') {
@@ -200,7 +202,8 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
           clearCart();
           setOrderPlaced(true);
         } else {
-          throw new Error('Failed to create order');
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create order');
         }
       } else {
         // Handle online payment via SSLCommerz
@@ -231,12 +234,13 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
           // Redirect to SSLCommerz payment gateway
           window.location.href = result.data.GatewayPageURL;
         } else {
-          throw new Error(result.message || 'Failed to create payment session');
+          throw new Error(result.error || result.message || 'অনলাইন পেমেন্ট সেশন তৈরি করতে সমস্যা হয়েছে');
         }
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('অর্ডার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+      const errorMessage = error instanceof Error ? error.message : 'অর্ডার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+      setSubmitError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -523,6 +527,27 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Error Message */}
+              {submitError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-red-800">
+                    <X className="h-4 w-4" />
+                    <span className="font-medium">সমস্যা হয়েছে</span>
+                  </div>
+                  <p className="text-sm text-red-700 mt-1">
+                    {submitError}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSubmitError(null)}
+                    className="mt-2 text-red-600 hover:text-red-700"
+                  >
+                    বন্ধ করুন
+                  </Button>
+                </div>
+              )}
 
               {/* Place Order Button */}
               <Button

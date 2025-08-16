@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,9 +30,35 @@ export async function POST(request: NextRequest) {
     if (validationResult.status === 'VALID' || validationResult.status === 'VALIDATED') {
       // Payment is successful and verified
       
-      // TODO: Update order status in database
-      // TODO: Clear user's cart
-      // TODO: Send confirmation email
+      // Update order status in database
+      const order = await prisma.order.findFirst({
+        where: { 
+          OR: [
+            { transactionId: tranId },
+            { orderNumber: tranId }
+          ]
+        }
+      });
+
+      if (order) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            status: 'CONFIRMED',
+            paymentStatus: 'PAID',
+            paymentDetails: JSON.stringify({
+              valId,
+              bankTranId,
+              cardType,
+              amount,
+              verificationStatus: validationResult.status,
+              paidAt: new Date()
+            })
+          }
+        });
+
+        console.log('Order updated successfully:', order.id);
+      }
       
       console.log('Payment successful:', {
         tranId,
@@ -40,23 +67,23 @@ export async function POST(request: NextRequest) {
         status: validationResult.status
       });
 
-      // Redirect to success page
+      // Redirect to success page with Bengali locale
       return NextResponse.redirect(
-        new URL(`/payment/success?tran_id=${tranId}&amount=${amount}`, request.url)
+        new URL(`/bn/order-success?orderId=${order?.id}&transactionId=${tranId}&amount=${amount}`, request.url)
       );
     } else {
       // Payment verification failed
       console.error('Payment verification failed:', validationResult);
       
       return NextResponse.redirect(
-        new URL(`/payment/failed?tran_id=${tranId}&reason=verification_failed`, request.url)
+        new URL(`/bn/order-failed?transactionId=${tranId}&reason=verification_failed`, request.url)
       );
     }
     
   } catch (error) {
     console.error('Payment success handler error:', error);
     return NextResponse.redirect(
-      new URL('/payment/failed?reason=processing_error', request.url)
+      new URL('/bn/order-failed?reason=processing_error', request.url)
     );
   }
 }
@@ -68,6 +95,6 @@ export async function GET(request: NextRequest) {
   const amount = searchParams.get('amount');
   
   return NextResponse.redirect(
-    new URL(`/payment/success?tran_id=${tranId}&amount=${amount}`, request.url)
+    new URL(`/bn/order-success?transactionId=${tranId}&amount=${amount}`, request.url)
   );
 }
