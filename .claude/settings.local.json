@@ -30,7 +30,8 @@
       "Bash(timeout 30 npm run build)",
       "Bash(mkdir:*)",
       "Bash(mv:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git config:*)"
     ],
     "deny": [],
     "ask": [],

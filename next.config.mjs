@@ -32,6 +32,24 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  webpack: (config, { isServer }) => {
+    // Handle Prisma client for both server and client builds
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      };
+    }
+    
+    // Ensure Prisma client is properly resolved
+    config.externals = config.externals || [];
+    config.externals.push('_http_common');
+    
+    return config;
+  },
 };
 
 export default withNextIntl(nextConfig);
