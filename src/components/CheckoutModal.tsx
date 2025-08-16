@@ -31,7 +31,7 @@ const checkoutSchema = z.object({
   city: z.string().min(2, "শহরের নাম দিন"),
   district: z.string().min(2, "জেলার নাম দিন"),
   postalCode: z.string().optional(),
-  paymentMethod: z.enum(["cash_on_delivery", "mobile_banking", "bank_transfer"]),
+  paymentMethod: z.enum(["cash_on_delivery", "mobile_banking", "bank_transfer", "online_payment"]),
   specialInstructions: z.string().optional()
 });
 
@@ -161,7 +161,7 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
     setIsSubmitting(true);
     
     try {
-      if (data.paymentMethod === 'cash_on_delivery') {
+      if (data.paymentMethod === 'cash_on_delivery' || data.paymentMethod === 'mobile_banking' || data.paymentMethod === 'bank_transfer') {
         // Handle cash on delivery - create order directly
         const orderData = {
           items,
@@ -188,7 +188,7 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
               price: item.product.price
             })),
             shippingAddress: data,
-            paymentMethod: 'CASH_ON_DELIVERY',
+            paymentMethod: data.paymentMethod.toUpperCase(),
             total: finalTotal,
             subtotal: totalPrice,
             tax: 0,
@@ -210,7 +210,12 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            items,
+            items: items.map(item => ({
+              productId: item.productId,
+              product: item.product,
+              quantity: item.quantity,
+              price: item.product.price
+            })),
             customerInfo: data,
             subtotal: totalPrice,
             deliveryFee,
@@ -473,6 +478,22 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                         bKash (01XXXXXXXX), Nagad (01XXXXXXXX), Rocket (01XXXXXXXX)
                         <br />
                         <span className="text-green-600">✓ তাৎক্ষণিক পেমেন্ট নিশ্চিতকরণ</span>
+                      </div>
+                    </div>
+                  </label>
+                  <label className="flex items-center p-2 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      {...form.register("paymentMethod")}
+                      type="radio"
+                      value="online_payment"
+                      className="mr-3"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">💳 অনলাইন পেমেন্ট</div>
+                      <div className="text-xs text-gray-600">
+                        কার্ড, bKash, Nagad, Rocket, ইন্টারনেট ব্যাংকিং
+                        <br />
+                        <span className="text-green-600">✓ SSLCommerz দ্বারা সুরক্ষিত</span>
                       </div>
                     </div>
                   </label>
