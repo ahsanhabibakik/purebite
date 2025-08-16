@@ -1,12 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, X } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { products } from "@/data/products";
-import { Product } from "@/types/product";
+import { useDebounce } from "@/hooks/use-debounce";
+
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  salePrice?: number;
+  image?: string;
+  images?: string[];
+  category: string;
+  tags?: string[];
+  inStock: boolean;
+  averageRating?: number;
+}
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -16,22 +29,36 @@ interface SearchModalProps {
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+  const debouncedQuery = useDebounce(query, 300);
 
-  useEffect(() => {
-    if (query.trim() === "") {
+  const searchProducts = useCallback(async (searchQuery: string) => {
+    if (searchQuery.trim() === "") {
       setResults([]);
       return;
     }
 
-    const filteredProducts = products.filter(product =>
-      product.name.toLowerCase().includes(query.toLowerCase()) ||
-      product.description.toLowerCase().includes(query.toLowerCase()) ||
-      product.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase())) ||
-      product.subcategory?.toLowerCase().includes(query.toLowerCase())
-    );
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}&limit=8`);
+      if (response.ok) {
+        const data = await response.json();
+        setResults(data.products || []);
+      } else {
+        console.error('Search failed:', response.statusText);
+        setResults([]);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    setResults(filteredProducts.slice(0, 8));
-  }, [query]);
+  useEffect(() => {
+    searchProducts(debouncedQuery);
+  }, [debouncedQuery, searchProducts]);
 
   useEffect(() => {
     if (isOpen) {
@@ -85,6 +112,11 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p>কিছু টাইপ করে সার্চ শুরু করুন</p>
             </div>
+          ) : loading ? (
+            <div className="p-8 text-center text-gray-500">
+              <Loader2 className="h-8 w-8 mx-auto mb-4 text-gray-400 animate-spin" />
+              <p>খুঁজে দেখা হচ্ছে...</p>
+            </div>
           ) : results.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               <p>কোন পণ্য পাওয়া যায়নি</p>
@@ -99,13 +131,13 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 {results.map((product) => (
                   <Link
                     key={product.id}
-                    href={`/products/${product.id}`}
+                    href={`/bn/products/${product.id}`}
                     onClick={onClose}
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded">
                       <Image
-                        src={product.images[0] || "/placeholder-product.jpg"}
+                        src={product.image || product.images?.[0] || "/placeholder-product.jpg"}
                         alt={product.name}
                         fill
                         className="object-cover"
@@ -120,14 +152,33 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         {product.description}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm font-semibold text-green-600">
-                          ৳{product.price}
-                        </span>
-                        {product.subcategory && (
+                        {product.salePrice ? (
+                          <>
+                            <span className="text-sm font-semibold text-green-600">
+                              ৳{product.salePrice}
+                            </span>
+                            <span className="text-xs text-gray-400 line-through">
+                              ৳{product.price}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-sm font-semibold text-green-600">
+                            ৳{product.price}
+                          </span>
+                        )}
+                        {product.category && (
                           <>
                             <span className="text-gray-400">•</span>
                             <span className="text-xs text-gray-500">
-                              {product.subcategory}
+                              {product.category}
+                            </span>
+                          </>
+                        )}
+                        {product.averageRating && product.averageRating > 0 && (
+                          <>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-xs text-yellow-500">
+                              ⭐ {product.averageRating.toFixed(1)}
                             </span>
                           </>
                         )}
@@ -139,8 +190,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               
               {results.length === 8 && (
                 <div className="mt-4 text-center">
-                  <Button variant="outline" asChild onClick={onClose}>
-                    <Link href={`/shop?search=${encodeURIComponent(query)}`}>
+                  <Button variant="outline" asChild>
+                    <Link href={`/bn/shop?search=${encodeURIComponent(query)}`} onClick={onClose}>
                       আরও ফলাফল দেখুন
                     </Link>
                   </Button>

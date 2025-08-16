@@ -12,12 +12,13 @@ import { useReviewsStore } from "@/store/reviews";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
-  product: Product;
+  product: Product | any; // Make it flexible to accept both static and database products
   className?: string;
-  onQuickView?: (product: Product) => void;
+  onQuickView?: (product: Product | any) => void;
+  viewMode?: "grid" | "list";
 }
 
-export function ProductCard({ product, className, onQuickView }: ProductCardProps) {
+export function ProductCard({ product, className, onQuickView, viewMode = "grid" }: ProductCardProps) {
   const { addItem, openCart } = useCartStore();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlistStore();
   const { addItem: addToComparison, removeItem: removeFromComparison, isInComparison, getTotalItems } = useComparisonStore();
@@ -56,8 +57,8 @@ export function ProductCard({ product, className, onQuickView }: ProductCardProp
     onQuickView?.(product);
   };
 
-  const discountPercentage = product.originalPrice 
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const discountPercentage = (product.originalPrice || product.salePrice) 
+    ? Math.round(((product.price - (product.salePrice || product.originalPrice)) / product.price) * 100)
     : 0;
 
   const reviewStats = getReviewStats(product.id);
@@ -67,10 +68,10 @@ export function ProductCard({ product, className, onQuickView }: ProductCardProp
       "group relative overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md",
       className
     )}>
-      <Link href={`/products/${product.id}`}>
+      <Link href={`/bn/products/${product.id}`}>
         <div className="relative aspect-square overflow-hidden">
           <Image
-            src={product.images[0] || "/placeholder-product.jpg"}
+            src={product.image || product.images?.[0] || "/placeholder-product.jpg"}
             alt={product.name}
             fill
             className="object-cover transition-transform group-hover:scale-105"
