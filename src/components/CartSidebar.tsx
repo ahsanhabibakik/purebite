@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { X, Plus, Minus, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart";
 import { cn } from "@/lib/utils";
+import { CheckoutModal } from "@/components/CheckoutModal";
 
 export function CartSidebar() {
   const {
@@ -19,6 +20,8 @@ export function CartSidebar() {
     getTotalPrice,
     clearCart
   } = useCartStore();
+  
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -189,10 +192,15 @@ export function CartSidebar() {
               </div>
               
               {/* Checkout Button */}
-              <Button className="w-full" size="lg" asChild>
-                <Link href="/checkout" onClick={closeCart}>
-                  চেকআউট (৳{totalPrice})
-                </Link>
+              <Button 
+                className="w-full" 
+                size="lg" 
+                onClick={() => {
+                  setIsCheckoutModalOpen(true);
+                  closeCart();
+                }}
+              >
+                চেকআউট (৳{totalPrice})
               </Button>
               
               {/* Continue Shopping */}
@@ -210,6 +218,12 @@ export function CartSidebar() {
           )}
         </div>
       </div>
+      
+      {/* Checkout Modal */}
+      <CheckoutModal 
+        isOpen={isCheckoutModalOpen} 
+        onClose={() => setIsCheckoutModalOpen(false)} 
+      />
     </>
   );
 }
