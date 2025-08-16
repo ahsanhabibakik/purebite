@@ -1,5 +1,5 @@
 # PureBite - Healthy Snacks E-commerce Platform
-.
+
 
 A complete e-commerce website for healthy Bangladeshi snacks and food products built with Next.js 15, TypeScript, and Tailwind CSS.
 
