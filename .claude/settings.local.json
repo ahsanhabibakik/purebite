@@ -31,7 +31,11 @@
       "Bash(mkdir:*)",
       "Bash(mv:*)",
       "Bash(npx tsc:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(git log:*)",
+      "Bash(tasklist)",
+      "Bash(pnpm dlx prisma generate:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": [],

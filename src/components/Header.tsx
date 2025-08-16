@@ -11,6 +11,7 @@ import { useComparisonStore } from "@/store/comparison";
 import { SearchModal } from "@/components/SearchModal";
 import { AuthButton } from "@/components/auth/AuthButton";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { NotificationSystem } from "@/components/notifications/NotificationSystem";
 
 export function Header() {
   const t = useTranslations('navigation');
@@ -115,6 +116,9 @@ export function Header() {
               </span>
             )}
           </Button>
+
+          {/* Notifications (for logged in users) */}
+          <NotificationSystem />
 
           {/* Language Switcher */}
           <LanguageSwitcher variant="button" showLabel={false} />
