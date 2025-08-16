@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/safe-build.js",
+    "build": "prisma generate && next build",
     "build:original": "prisma generate && next build",
     "build:clean": "rm -rf .next && npm run build",
     "build:force": "npm run fix:prisma && next build",
