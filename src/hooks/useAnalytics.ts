@@ -83,17 +83,30 @@ class EventQueue {
     }
 
     try {
-      await fetch('/api/analytics/track', {
+      const response = await fetch('/api/analytics/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ events }),
         keepalive: true
       });
+
+      if (!response.ok) {
+        throw new Error(`Analytics API error: ${response.status}`);
+      }
     } catch (error) {
-      console.error('Failed to send analytics events:', error);
+      // Only log analytics errors in development to avoid console spam in production
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Analytics tracking failed (non-critical):', error instanceof Error ? error.message : error);
+      }
+      
       // Re-queue events on failure (with limit to prevent infinite growth)
-      if (this.queue.length < 100) {
-        this.queue.unshift(...events);
+      // But only for important events like purchases
+      const importantEvents = events.filter(event => 
+        ['purchase', 'checkout_complete', 'error_occurred'].includes(event.event)
+      );
+      
+      if (this.queue.length < 50 && importantEvents.length > 0) {
+        this.queue.unshift(...importantEvents);
       }
     }
   }

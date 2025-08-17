@@ -239,7 +239,30 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'অর্ডার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'অর্ডার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+      
+      if (error instanceof Error) {
+        // Check for specific error patterns
+        const message = error.message.toLowerCase();
+        
+        if (message.includes('network') || message.includes('fetch')) {
+          errorMessage = 'ইন্টারনেট সংযোগ সমস্যা। দয়া করে আবার চেষ্টা করুন।';
+        } else if (message.includes('validation') || message.includes('invalid')) {
+          errorMessage = 'প্রদত্ত তথ্যে সমস্যা আছে। দয়া করে সব ক্ষেত্র সঠিকভাবে পূরণ করুন।';
+        } else if (message.includes('server') || message.includes('database')) {
+          errorMessage = 'সার্ভার সমস্যা। দয়া করে কিছুক্ষণ পর আবার চেষ্টা করুন।';
+        } else if (message.includes('unauthorized') || message.includes('permission')) {
+          errorMessage = 'অনুমতি সমস্যা। দয়া করে লগইন করে আবার চেষ্টা করুন।';
+        } else {
+          // Use the original error message if it's in Bengali
+          errorMessage = error.message.includes('অর্ডার') || error.message.includes('সমস্যা') 
+            ? error.message 
+            : 'অর্ডার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+        }
+      }
+      
       setSubmitError(errorMessage);
     } finally {
       setIsSubmitting(false);
