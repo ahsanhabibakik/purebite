@@ -8,25 +8,20 @@ export default createMiddleware({
   // Used when no locale matches
   defaultLocale: 'bn',
   
-  // Locale detection strategy
-  localeDetection: true,
+  // Disable locale detection to prevent automatic redirects
+  localeDetection: false,
   
-  // Optional: Custom locale prefix
-  localePrefix: 'as-needed'
+  // Never show locale prefix in URL
+  localePrefix: 'never'
 });
 
 export const config = {
-  // Match only internationalized pathnames
+  // Match only internationalized pathnames, excluding API routes and static files
   matcher: [
     // Enable a redirect to a matching locale at the root
     '/',
     
-    // Set a cookie to remember the locale for all requests
-    // that don't have a locale prefix
-    '/(bn|en)/:path*',
-    
-    // Enable redirects that add missing locales
-    // (e.g. `/pathnames` -> `/en/pathnames`)
-    '/((?!_next|_vercel|api|.*\\..*).*)' 
+    // Match all routes except API, static files, and Next.js internals
+    '/((?!api|_next|_vercel|.*\\..*).*)' 
   ]
 };
