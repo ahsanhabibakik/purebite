@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { orderSchema, validateInput } from '@/lib/validation';
+import { validateStockAvailability, reserveStock } from '@/lib/stockValidation';
 
 // Environment validation
 function validateEnvironment() {
@@ -109,6 +110,25 @@ export async function POST(request: NextRequest) {
 
     const { items, shippingAddress, paymentMethod, total, subtotal, tax, shipping } = validation.data;
 
+    // Validate stock availability before creating order
+    const stockValidation = await validateStockAvailability(items);
+    if (!stockValidation.valid) {
+      return NextResponse.json({ 
+        error: `স্টক সমস্যা: ${stockValidation.errors.map(e => e.message).join(', ')}`,
+        code: 'INSUFFICIENT_STOCK',
+        stockErrors: stockValidation.errors
+      }, { status: 400 });
+    }
+
+    // Reserve stock for this order
+    const stockReservation = await reserveStock(items);
+    if (!stockReservation.success) {
+      return NextResponse.json({ 
+        error: stockReservation.error,
+        code: 'STOCK_RESERVATION_FAILED'
+      }, { status: 400 });
+    }
+
     // For guest orders or when user is not logged in, create order without user authentication
     let user = null;
     if (session?.user?.email) {
@@ -158,6 +178,7 @@ export async function POST(request: NextRequest) {
           customerEmail: shippingAddress.email?.trim() || session?.user?.email || '',
           customerPhone: shippingAddress.phone.trim(),
           customerName: shippingAddress.fullName.trim(),
+          stockReservationId: stockReservation.reservationId,
           items: {
             create: items.map((item: any) => ({
               productId: item.productId,
