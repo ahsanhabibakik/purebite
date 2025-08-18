@@ -113,6 +113,7 @@ model Product {
   wishlist        Wishlist[]
   cartItems       CartItem[]
   stockMovements  StockMovement[]
+  stockReservations StockReservation[]
 
   @@map("products")
 }
@@ -135,6 +136,7 @@ model Order {
   currency         String      @default("usd")
   trackingNumber   String?
   carrierId        String?     @db.ObjectId
+  stockReservationId String?   // ID for stock reservation
   shippingAddress  Json
   billingAddress   Json?
   isSandbox        Boolean     @default(false)
@@ -471,6 +473,21 @@ model StockAlert {
   @@map("stock_alerts")
 }
 
+model StockReservation {
+  id            String                @id @default(auto()) @map("_id") @db.ObjectId
+  reservationId String
+  productId     String                @db.ObjectId
+  quantity      Int
+  status        StockReservationStatus @default(ACTIVE)
+  expiresAt     DateTime
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("stock_reservations")
+}
+
 // Enums
 enum UserRole {
   CUSTOMER
@@ -601,6 +618,13 @@ enum ChatMessageType {
   IMAGE
   FILE
   SYSTEM
+}
+
+enum StockReservationStatus {
+  ACTIVE
+  CONFIRMED
+  RELEASED
+  EXPIRED
 }
 
 // Order tracking models
