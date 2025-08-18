@@ -41,7 +41,9 @@
       "Bash(pnpm approve-builds:*)",
       "Bash(set SKIP_PRISMA_GENERATE=true)",
       "Bash(next build)",
-      "Bash(next build\"\n- Remove dependency on uncommitted safe-build.js script\n- Ensures build works in deployment environments like Vercel\n- Resolves deployment error: \"Cannot find module '/vercel/path0/scripts/safe-build.js'\"\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(next build\"\n- Remove dependency on uncommitted safe-build.js script\n- Ensures build works in deployment environments like Vercel\n- Resolves deployment error: \"Cannot find module '/vercel/path0/scripts/safe-build.js'\"\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(curl:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": [],
