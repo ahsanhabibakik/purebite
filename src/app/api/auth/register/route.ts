@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
-import { z } from "zod"
-
-const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-})
+import { registerSchema, validateInput } from "@/lib/validation"
+import { sendEmailVerification } from "@/lib/emailVerification"
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, password } = registerSchema.parse(body)
+    
+    // Validate input with Zod
+    const validation = validateInput(registerSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      )
+    }
+    
+    const { name, email, password } = validation.data
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -45,19 +50,23 @@ export async function POST(req: NextRequest) {
       }
     })
 
+    // Send email verification
+    const emailResult = await sendEmailVerification(email, name);
+    
     return NextResponse.json({
       message: "User created successfully",
-      user
+      user,
+      emailVerification: {
+        sent: emailResult.success,
+        message: emailResult.success 
+          ? "যাচাইকরণ ইমেইল পাঠানো হয়েছে" 
+          : "ইমেইল পাঠাতে সমস্যা হয়েছে কিন্তু অ্যাকাউন্ট তৈরি হয়েছে"
+      }
     })
   } catch (error) {
     console.error("Registration error:", error)
     
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid input data", details: error.errors },
-        { status: 400 }
-      )
-    }
+    // Error handling is now done in validation function
 
     return NextResponse.json(
       { error: "Internal server error" },
