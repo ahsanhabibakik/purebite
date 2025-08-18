@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { orderSchema, validateInput } from '@/lib/validation';
 
 // Environment validation
 function validateEnvironment() {
@@ -96,53 +97,17 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     
     const data = await request.json();
-    const { items, shippingAddress, paymentMethod, total, subtotal, tax, shipping } = data;
 
-    // Enhanced validation with better error messages
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    // Validate input data with Zod
+    const validation = validateInput(orderSchema, data);
+    if (!validation.success) {
       return NextResponse.json({ 
-        error: 'কার্টে কোন পণ্য নেই',
-        code: 'EMPTY_CART'
+        error: validation.error,
+        code: 'VALIDATION_ERROR'
       }, { status: 400 });
     }
 
-    if (!shippingAddress) {
-      return NextResponse.json({ 
-        error: 'ডেলিভারি তথ্য প্রয়োজন',
-        code: 'MISSING_SHIPPING_ADDRESS'
-      }, { status: 400 });
-    }
-
-    if (!shippingAddress.fullName || shippingAddress.fullName.trim().length < 2) {
-      return NextResponse.json({ 
-        error: 'সম্পূর্ণ নাম প্রয়োজন',
-        code: 'INVALID_NAME'
-      }, { status: 400 });
-    }
-
-    if (!shippingAddress.phone || shippingAddress.phone.trim().length < 11) {
-      return NextResponse.json({ 
-        error: 'সঠিক মোবাইল নম্বর প্রয়োজন',
-        code: 'INVALID_PHONE'
-      }, { status: 400 });
-    }
-
-    if (!shippingAddress.street || shippingAddress.street.trim().length < 5) {
-      return NextResponse.json({ 
-        error: 'সম্পূর্ণ ঠিকানা প্রয়োজন',
-        code: 'INVALID_ADDRESS'
-      }, { status: 400 });
-    }
-
-    // Validate items structure
-    for (const item of items) {
-      if (!item.productId || !item.quantity || !item.price) {
-        return NextResponse.json({ 
-          error: 'পণ্যের তথ্য অসম্পূর্ণ',
-          code: 'INVALID_ITEM_DATA'
-        }, { status: 400 });
-      }
-    }
+    const { items, shippingAddress, paymentMethod, total, subtotal, tax, shipping } = validation.data;
 
     // For guest orders or when user is not logged in, create order without user authentication
     let user = null;
