@@ -32,14 +32,70 @@ export async function POST(request: NextRequest) {
     const validationResult = await validationResponse.json();
     
     if (validationResult.status === 'VALID' || validationResult.status === 'VALIDATED') {
-      // TODO: Update order status in database
-      // TODO: Send confirmation email
-      // TODO: Update inventory
-      // TODO: Clear user's cart
-      
-      console.log('IPN validation successful for transaction:', tranId);
-      
-      return NextResponse.json({ status: 'success' });
+      try {
+        // Import prisma client
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+
+        // Find the order by transaction ID
+        const order = await prisma.order.findFirst({
+          where: { paymentReference: tranId },
+          include: { items: true, user: true }
+        });
+
+        if (order) {
+          // Update order status
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              status: status === 'VALID' ? 'CONFIRMED' : 'PROCESSING',
+              paymentStatus: 'COMPLETED',
+              updatedAt: new Date()
+            }
+          });
+
+          // Update inventory for each item
+          for (const item of order.items) {
+            await prisma.product.update({
+              where: { id: item.productId },
+              data: {
+                stockCount: {
+                  decrement: item.quantity
+                }
+              }
+            });
+
+            // Create stock movement record
+            await prisma.stockMovement.create({
+              data: {
+                productId: item.productId,
+                type: 'SOLD',
+                quantity: -item.quantity,
+                reason: `Order ${order.id} - Payment confirmed`,
+                userId: order.userId
+              }
+            });
+          }
+
+          // Clear user's cart (if exists)
+          if (order.userId) {
+            await prisma.cartItem.deleteMany({
+              where: { userId: order.userId }
+            });
+          }
+
+          console.log('IPN validation successful for transaction:', tranId);
+          
+          await prisma.$disconnect();
+          return NextResponse.json({ status: 'success' });
+        } else {
+          console.error('Order not found for transaction:', tranId);
+          return NextResponse.json({ status: 'order_not_found' }, { status: 404 });
+        }
+      } catch (dbError) {
+        console.error('Database error during IPN processing:', dbError);
+        return NextResponse.json({ status: 'database_error' }, { status: 500 });
+      }
     } else {
       console.error('IPN validation failed:', validationResult);
       return NextResponse.json({ status: 'failed' }, { status: 400 });
