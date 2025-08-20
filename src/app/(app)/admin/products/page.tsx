@@ -79,61 +79,28 @@ export default function ProductManagementPage() {
     }
   });
 
-  // Mock data - Replace with actual API calls
+  // Fetch products from API
   useEffect(() => {
-    const mockProducts: Product[] = [
-      {
-        id: "1",
-        name: "জৈব আম",
-        description: "মিষ্টি ও পুষ্টিকর জৈব আম",
-        price: 120,
-        discountPrice: 100,
-        category: "ফল",
-        unit: "কেজি",
-        stock: 50,
-        images: ["/api/placeholder/300/200"],
-        tags: ["জৈব", "মৌসুমি"],
-        featured: true,
-        status: "active",
-        createdAt: "2024-01-15",
-        updatedAt: "2024-01-15"
-      },
-      {
-        id: "2",
-        name: "তাজা গাজর",
-        description: "পুষ্টিকর তাজা গাজর",
-        price: 80,
-        category: "সবজি",
-        unit: "কেজি",
-        stock: 30,
-        images: ["/api/placeholder/300/200"],
-        tags: ["তাজা", "পুষ্টিকর"],
-        featured: false,
-        status: "active",
-        createdAt: "2024-01-10",
-        updatedAt: "2024-01-10"
-      },
-      {
-        id: "3",
-        name: "দুধ",
-        description: "খাঁটি গরুর দুধ",
-        price: 60,
-        category: "দুগ্ধজাত",
-        unit: "লিটার",
-        stock: 0,
-        images: ["/api/placeholder/300/200"],
-        tags: ["খাঁটি", "তাজা"],
-        featured: false,
-        status: "out_of_stock",
-        createdAt: "2024-01-05",
-        updatedAt: "2024-01-12"
-      },
-    ];
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('/api/products');
+        if (response.ok) {
+          const data = await response.json();
+          setProducts(data.products || []);
+        } else {
+          console.error('Failed to fetch products');
+          // Fallback to empty array
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    setTimeout(() => {
-      setProducts(mockProducts);
-      setIsLoading(false);
-    }, 1000);
+    fetchProducts();
   }, []);
 
   const categories = ["ফল", "সবজি", "দুগ্ধজাত", "মাছ", "মাংস", "চাল-ডাল", "মসলা"];
@@ -151,18 +118,46 @@ export default function ProductManagementPage() {
     featured: products.filter(p => p.featured).length,
   };
 
-  const onSubmit = (data: ProductForm) => {
+  const onSubmit = async (data: ProductForm) => {
     const productData = {
       ...data,
       images: uploadedImages,
       tags: data.tags ? data.tags.split(',').map(tag => tag.trim()) : [],
     };
-    console.log("Product data:", productData);
-    // TODO: Implement API call to save product
-    setShowAddModal(false);
-    setEditingProduct(null);
-    setUploadedImages([]);
-    form.reset();
+    
+    try {
+      const url = editingProduct ? `/api/products/${editingProduct.id}` : '/api/products';
+      const method = editingProduct ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        if (editingProduct) {
+          // Update existing product
+          setProducts(products.map(p => p.id === editingProduct.id ? result.product : p));
+        } else {
+          // Add new product
+          setProducts([result.product, ...products]);
+        }
+        
+        setShowAddModal(false);
+        setEditingProduct(null);
+        setUploadedImages([]);
+        form.reset();
+      } else {
+        console.error('Failed to save product');
+      }
+    } catch (error) {
+      console.error('Error saving product:', error);
+    }
   };
 
   const handleEdit = (product: Product) => {
@@ -184,9 +179,21 @@ export default function ProductManagementPage() {
     setShowAddModal(true);
   };
 
-  const handleDelete = (productId: string) => {
+  const handleDelete = async (productId: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
-      setProducts(products.filter(p => p.id !== productId));
+      try {
+        const response = await fetch(`/api/products/${productId}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          setProducts(products.filter(p => p.id !== productId));
+        } else {
+          console.error('Failed to delete product');
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error);
+      }
     }
   };
 
