@@ -50,7 +50,10 @@
       "Bash(git remote add:*)",
       "Bash(git remote remove:*)",
       "Bash(git remote rename:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(touch:*)",
+      "Bash(pnpm build:*)",
+      "Bash(npx vercel:*)"
     ],
     "deny": [],
     "ask": [],
