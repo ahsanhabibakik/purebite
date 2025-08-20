@@ -45,7 +45,12 @@
       "Bash(curl:*)",
       "Bash(grep:*)",
       "Bash(timeout 30 git push origin main)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(timeout 300 git push origin main)",
+      "Bash(git remote add:*)",
+      "Bash(git remote remove:*)",
+      "Bash(git remote rename:*)",
+      "Bash(git branch:*)"
     ],
     "deny": [],
     "ask": [],
